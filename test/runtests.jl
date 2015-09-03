@@ -19,3 +19,9 @@ facts("Utopia and Nadir points") do
     @fact multim.utopia --> roughly([0.0, 0.0], 1e-5)
     @fact multim.nadir --> roughly([0.25, 0.25], 1e-5)
 end
+
+
+facts("Stage 2 pareto front") do
+    # TODO
+    @fact 1 == 1
+end
