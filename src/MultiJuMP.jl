@@ -81,8 +81,11 @@ function _solve_stage1(m::Model)
     # Add nadir. [with > 2 objectives, we need to use utopiavarvalues and a loop]
     push!(multim.nadir, valf1, nadir2)
 
-    @defNLExpr(nf1, (f1 - multim.utopia[1]) / (multim.nadir[1] - multim.utopia[1]))
-    @defNLExpr(nf2, (f2 - multim.utopia[2]) / (multim.nadir[2] - multim.utopia[2]))
+    # JuMP doesn't handle divisions well, so make dummy multipliers
+    multiplier1 = 1.0 / (multim.nadir[1] - multim.utopia[1])
+    multiplier2 = 1.0 / (multim.nadir[2] - multim.utopia[2])
+    @defNLExpr(nf1, (f1 - multim.utopia[1]) * multiplier1)
+    @defNLExpr(nf2, (f2 - multim.utopia[2]) * multiplier2)
 
     multim.normalf1 = nf1
     multim.normalf2 = nf2
@@ -100,10 +103,12 @@ function _solve_stage2(m::Model)
     # local definitions like nf1 = multim.normalf1 works
     nf1 = multim.normalf1
     nf2 = multim.normalf2
-
+    w1 = [1.0]
+    w2 = [1.0]
+    @setNLObjective(m, :Min, nf1*w1[1] + nf2*w2[1])
     for weight in [stepsize:stepsize:1-stepsize]
-        @defNLExpr(weightedobj, nf1 * weight + nf2 * (1.0-weight))
-        @setNLObjective(m, :Min, weightedobj)
+        w1[1] = weight
+        w2[1] = 1-weight
         status = solve(m, ignore_solve_hook=true)
         if status != :Optimal
             return status
