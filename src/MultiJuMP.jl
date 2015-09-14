@@ -103,8 +103,8 @@ function _solve_stage2(m::Model)
     # local definitions like nf1 = multim.normalf1 works
     nf1 = multim.normalf1
     nf2 = multim.normalf2
-    w1 = [1.0]
-    w2 = [1.0]
+    w1 = collect(1.0)
+    w2 = collect(1.0)
     @setNLObjective(m, :Min, nf1*w1[1] + nf2*w2[1])
     for weight in [stepsize:stepsize:1-stepsize]
         w1[1] = weight
