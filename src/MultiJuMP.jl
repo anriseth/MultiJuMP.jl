@@ -22,10 +22,11 @@ type MultiData
     ninitial::Int
     maxlength::Float64
     #
-    # utopia
+    # stored values
     utopiavarvalues::Array{Dict, 1}
     utopia::Array{Float64,1}
     nadir::Array{Float64,1}
+    paretovarvalues::Array{Dict, 1}
     paretofront
 end
 
@@ -37,7 +38,7 @@ function MultiModel(;solver=Ipopt.IpoptSolver())
                               ParametricExpression{0}, ParametricExpression{0},
                               2, 1.0,
                               Dict[], Float64[],
-                              Float64[], Any[])
+                              Float64[], Dict[], Any[])
     return m
 end
 
@@ -61,6 +62,7 @@ function _solve_stage1(m::Model)
         return status
     end
     push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+    push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
     valf1 = getValue(f1)
     valf2 = getValue(f2)
     nadir2 = valf2
@@ -73,14 +75,17 @@ function _solve_stage1(m::Model)
         return status
     end
     push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+    push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
     valf1 = getValue(f1)
     valf2 = getValue(f2)
 
     push!(multim.utopia, valf2)
     push!(multim.paretofront, [valf1, valf2])
+
     # Add nadir. [with > 2 objectives, we need to use utopiavarvalues and a loop]
     push!(multim.nadir, valf1, nadir2)
 
+    # TODO: redo nf{1,2}: We don't need the multim.utopia[i] subtraction
     # JuMP doesn't handle divisions well, so make dummy multipliers
     multiplier1 = 1.0 / (multim.nadir[1] - multim.utopia[1])
     multiplier2 = 1.0 / (multim.nadir[2] - multim.utopia[2])
@@ -117,6 +122,7 @@ function _solve_stage2(m::Model)
         valf2 = getValue(multim.f2)
 
         push!(multim.paretofront, [valf1, valf2])
+        push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
     end
 
     return :Optimal # TODO: find a better way to do this?
