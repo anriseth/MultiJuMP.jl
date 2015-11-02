@@ -28,6 +28,9 @@ type MultiData
     nadir::Array{Float64,1}
     paretovarvalues::Array{Dict, 1}
     paretofront
+
+    Phi::Array{Float64,2}
+    Fstar::Array{Float64,1}
 end
 
 
@@ -38,7 +41,8 @@ function MultiModel(;solver=Ipopt.IpoptSolver())
                               ParametricExpression{0}, ParametricExpression{0},
                               2, 1.0,
                               Dict[], Float64[],
-                              Float64[], Dict[], Any[])
+                              Float64[], Dict[], Any[],
+                              Array(Float64,2,2), Array(Float64,2))
     return m
 end
 
@@ -111,7 +115,9 @@ function _solve_stage2(m::Model)
     w1 = collect(1.0)
     w2 = collect(1.0)
     @setNLObjective(m, :Min, nf1*w1[1] + nf2*w2[1])
-    for weight in [stepsize:stepsize:1-stepsize]
+
+    weights = linspace(0,1,multim.ninitial)
+    for weight in weights[2:end-1]
         w1[1] = weight
         w2[1] = 1-weight
         status = solve(m, ignore_solve_hook=true)
@@ -128,20 +134,107 @@ function _solve_stage2(m::Model)
     return :Optimal # TODO: find a better way to do this?
 end
 
-function solvehook(m::Model; kwargs...)
+function solve_nbi(m::Model)
+    multim = getMultiData(m)
+    f1 = multim.f1
+    f2 = multim.f2
+    # Stage 1: Calculate \Phi
 
-    # Get utopia and nadir points. Normalise functions
-    status = _solve_stage1(m)
+    Fstar = zeros(2)
+    Phi = zeros(2,2)
+    
+    #Normalize the objective functions in the objective space
+    @setNLObjective(m, :Min, f1)
+    status = solve(m, ignore_solve_hook=true)
     if status != :Optimal
         return status
     end
+    push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+    push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+    valf1 = getValue(f1)
+    valf2 = getValue(f2)
 
-    # Perform standard normalised weighted sum
-    status = _solve_stage2(m)
+    Fstar[1] = valf1
+    Phi[2,1] = valf2
+    push!(multim.utopia, valf2)
+    push!(multim.paretofront, [valf1, valf2])
+    
+    @setNLObjective(m, :Min, f2)
+    status = solve(m, ignore_solve_hook=true)
     if status != :Optimal
         return status
     end
+    push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+    push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+    valf1 = getValue(f1)
+    valf2 = getValue(f2)
+    Fstar[2] = valf2
+    Phi[1,2] = valf1
 
+    Phi[1,2] -= Fstar[1]
+    Phi[2,1] -= Fstar[2]
+    
+    push!(multim.utopia, valf2)
+    push!(multim.paretofront, [valf1, valf2])
+    
+   
+    # TODO: redo nf{1,2}: We don't need the multim.utopia[i] subtraction
+    # JuMP doesn't handle divisions well, so make dummy multipliers
+    @defNLExpr(nf1, f1 - Fstar[1])
+    @defNLExpr(nf2, f2 - Fstar[2])
+
+    multim.normalf1 = nf1
+    multim.normalf2 = nf2
+
+    multim.Phi = Phi
+    multim.Fstar = Fstar
+
+    @defVar(m, t)
+
+    beta = [0.0, 1.0]
+    @addNLConstraint(m, constr1, Phi[1,2]*(beta[2]-t) == f1-Fstar[1])
+    @addNLConstraint(m, constr2, Phi[2,1]*(beta[1]-t) == f2-Fstar[2])
+
+     # TODO: this should be max. I've done something wrong in the algorithm
+    @setObjective(m, :Min, t)
+    
+    betas = linspace(0,1,multim.ninitial)
+    
+    for b in betas[2:end-1]
+        beta[1] = b
+        beta[2] = 1-b
+        status = solve(m, ignore_solve_hook=true)
+        if status != :Optimal
+            return status
+        end
+        valf1 = getValue(multim.f1)
+        valf2 = getValue(multim.f2)
+
+        push!(multim.paretofront, [valf1, valf2])
+        push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+    end
+    
+    return :Optimal
+
+end
+
+function solvehook(m::Model; method = :NBI, kwargs...)
+
+    if method == :WS
+        # Get utopia and nadir points. Normalise functions
+        status = _solve_stage1(m)
+        if status != :Optimal
+            return status
+        end
+
+        # Perform standard normalised weighted sum
+        status = _solve_stage2(m)
+        if status != :Optimal
+            return status
+        end
+    else
+        status = solve_nbi(m)
+    end
 
     # Stage 3
     # Delete nearly overlapping solutions on the pareto front
