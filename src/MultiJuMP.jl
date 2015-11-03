@@ -142,7 +142,7 @@ function solve_nbi(m::Model)
 
     Fstar = zeros(2)
     Phi = zeros(2,2)
-    
+
     #Normalize the objective functions in the objective space
     @setNLObjective(m, :Min, f1)
     status = solve(m, ignore_solve_hook=true)
@@ -158,7 +158,7 @@ function solve_nbi(m::Model)
     Phi[2,1] = valf2
     push!(multim.utopia, valf2)
     push!(multim.paretofront, [valf1, valf2])
-    
+
     @setNLObjective(m, :Min, f2)
     status = solve(m, ignore_solve_hook=true)
     if status != :Optimal
@@ -173,13 +173,10 @@ function solve_nbi(m::Model)
 
     Phi[1,2] -= Fstar[1]
     Phi[2,1] -= Fstar[2]
-    
+
     push!(multim.utopia, valf2)
     push!(multim.paretofront, [valf1, valf2])
-    
-   
-    # TODO: redo nf{1,2}: We don't need the multim.utopia[i] subtraction
-    # JuMP doesn't handle divisions well, so make dummy multipliers
+
     @defNLExpr(nf1, f1 - Fstar[1])
     @defNLExpr(nf2, f2 - Fstar[2])
 
@@ -195,11 +192,12 @@ function solve_nbi(m::Model)
     @addNLConstraint(m, constr1, Phi[1,2]*(beta[2]-t) == f1-Fstar[1])
     @addNLConstraint(m, constr2, Phi[2,1]*(beta[1]-t) == f2-Fstar[2])
 
-     # TODO: this should be max. I've done something wrong in the algorithm
-    @setObjective(m, :Min, t)
-    
+    # TODO: There is a bug in JuMP so it doesn't propagate all
+    # the necessary information if we use @setObjective instead of NLObjective
+    @setNLObjective(m, :Max, t)
+
     betas = linspace(0,1,multim.ninitial)
-    
+
     for b in betas[2:end-1]
         beta[1] = b
         beta[2] = 1-b
@@ -207,13 +205,14 @@ function solve_nbi(m::Model)
         if status != :Optimal
             return status
         end
+
         valf1 = getValue(multim.f1)
         valf2 = getValue(multim.f2)
 
         push!(multim.paretofront, [valf1, valf2])
         push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
     end
-    
+
     return :Optimal
 
 end
@@ -232,17 +231,17 @@ function solvehook(m::Model; method = :NBI, kwargs...)
         if status != :Optimal
             return status
         end
+
+        # Stage 3
+        # Delete nearly overlapping solutions on the pareto front
+        # Stage 4
+        # Stage 5
+        # Stage 6
+        # Stage 7
+        # Stage 8
     else
         status = solve_nbi(m)
     end
-
-    # Stage 3
-    # Delete nearly overlapping solutions on the pareto front
-    # Stage 4
-    # Stage 5
-    # Stage 6
-    # Stage 7
-    # Stage 8
 
     return status
 end
