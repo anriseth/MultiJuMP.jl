@@ -156,7 +156,7 @@ function solve_nbi(m::Model)
 
     Fstar[1] = valf1
     Phi[2,1] = valf2
-    push!(multim.utopia, valf2)
+    push!(multim.utopia, valf1)
     push!(multim.paretofront, [valf1, valf2])
 
     @setNLObjective(m, :Min, f2)
