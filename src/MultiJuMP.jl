@@ -4,23 +4,33 @@ module MultiJuMP
 
 using JuMP
 import Ipopt
-import ReverseDiffSparse: ParametricExpression
-using Compat
+import JuMP: NonlinearExpression, getValue
 
-export MultiModel, getMultiData
+export MultiModel, MultiObjective, getMultiData
+
+type MultiObjective
+    f # JuMP-expression TODO: use JuMPTypes or something?
+    sense::Symbol
+    # TODO: implement bound in algorithm
+    bound::Float64 # Hard lower/upper depending on sense
+end
+
+MultiObjective() = MultiObjective(Any, :Min, NaN)
+MultiObjective(f::NonlinearExpression) = MultiObjective(f, :Min, NaN)
+MultiObjective(f::NonlinearExpression, sense::Symbol) =
+    MultiObjective(f, symbol, NaN)
+
+getValue(obj::MultiObjective) =  getValue(obj.f)
 
 # stores extension data inside JuMP Model
 type MultiData
-    # TODO: can this work with linear and affine expressions as well?
-    #objectives::Array{ParametricExpression{0},1}
-    f1
-    f2
+    f1::MultiObjective
+    f2::MultiObjective
     normalf1
     normalf2
 
     #
     ninitial::Int
-    maxlength::Float64
     #
     # stored values
     utopiavarvalues::Array{Dict, 1}
@@ -37,9 +47,8 @@ end
 function MultiModel(;solver=Ipopt.IpoptSolver())
     m = Model(solver=solver)
     m.solvehook = solvehook
-    m.ext[:Multi] = MultiData(ParametricExpression{0}, ParametricExpression{0},
-                              ParametricExpression{0}, ParametricExpression{0},
-                              2, 1.0,
+    m.ext[:Multi] = MultiData(MultiObjective(), MultiObjective(), Any, Any,
+                              10,
                               Dict[], Float64[],
                               Float64[], Dict[], Any[],
                               Array(Float64,2,2), Array(Float64,2))
@@ -54,7 +63,7 @@ function getMultiData(m::Model)
     end
 end
 
-function _solve_stage1(m::Model)
+function _solve_ws(m::Model)
     multim = getMultiData(m)
     f1 = multim.f1
     f2 = multim.f2
@@ -93,33 +102,21 @@ function _solve_stage1(m::Model)
     # JuMP doesn't handle divisions well, so make dummy multipliers
     multiplier1 = 1.0 / (multim.nadir[1] - multim.utopia[1])
     multiplier2 = 1.0 / (multim.nadir[2] - multim.utopia[2])
-    @defNLExpr(nf1, (f1 - multim.utopia[1]) * multiplier1)
-    @defNLExpr(nf2, (f2 - multim.utopia[2]) * multiplier2)
+    @defNLExpr(m, nf1, (f1 - multim.utopia[1]) * multiplier1)
+    @defNLExpr(m, nf2, (f2 - multim.utopia[2]) * multiplier2)
 
     multim.normalf1 = nf1
     multim.normalf2 = nf2
 
-    return status
-
-end
-
-function _solve_stage2(m::Model)
     # Perform multiobjective optimization using the usual weighted sum approach
-    multim = getMultiData(m)
     stepsize = 1.0 / multim.ninitial
 
-    # We can't use multim.normalf1 in the @setNLObjective macro
-    # local definitions like nf1 = multim.normalf1 works
-    nf1 = multim.normalf1
-    nf2 = multim.normalf2
-    w1 = collect(1.0)
-    w2 = collect(1.0)
-    @setNLObjective(m, :Min, nf1*w1[1] + nf2*w2[1])
+    @defNLParam(m, w[i=1:2] == ones(2)[i])
+    @setNLObjective(m, :Min, nf1*w[1] + nf2*w[2])
 
     weights = linspace(0,1,multim.ninitial)
     for weight in weights[2:end-1]
-        w1[1] = weight
-        w2[1] = 1-weight
+        setValue(w, [weight, 1-weight])
         status = solve(m, ignore_solve_hook=true)
         if status != :Optimal
             return status
@@ -136,16 +133,17 @@ end
 
 function solve_nbi(m::Model)
     multim = getMultiData(m)
+    const sensemap = Dict(:Min => -1.0, :Max => 1.0)
+
     f1 = multim.f1
     f2 = multim.f2
-    # Stage 1: Calculate \Phi
-
+    # Stage 1: Calculate Φ
     Fstar = zeros(2)
     Phi = zeros(2,2)
 
-    #Normalize the objective functions in the objective space
-    @setNLObjective(m, :Min, f1)
-    status = solve(m, ignore_solve_hook=true)
+    # Individual minimisations
+    @setNLObjective(m, f1.sense, f1.f)
+    status = solve(m, ignore_solve_hook=true);
     if status != :Optimal
         return status
     end
@@ -154,13 +152,13 @@ function solve_nbi(m::Model)
     valf1 = getValue(f1)
     valf2 = getValue(f2)
 
-    Fstar[1] = valf1
-    Phi[2,1] = valf2
+    Fstar[1] = sensemap[f1.sense]*valf1
+    Phi[2,1] = sensemap[f2.sense]*valf2
     push!(multim.utopia, valf1)
     push!(multim.paretofront, [valf1, valf2])
 
-    @setNLObjective(m, :Min, f2)
-    status = solve(m, ignore_solve_hook=true)
+    @setNLObjective(m, f2.sense, f2.f)
+    status = solve(m, ignore_solve_hook=true);
     if status != :Optimal
         return status
     end
@@ -168,8 +166,8 @@ function solve_nbi(m::Model)
     push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
     valf1 = getValue(f1)
     valf2 = getValue(f2)
-    Fstar[2] = valf2
-    Phi[1,2] = valf1
+    Fstar[2] = sensemap[f2.sense]*valf2
+    Phi[1,2] = sensemap[f1.sense]*valf1
 
     Phi[1,2] -= Fstar[1]
     Phi[2,1] -= Fstar[2]
@@ -177,31 +175,38 @@ function solve_nbi(m::Model)
     push!(multim.utopia, valf2)
     push!(multim.paretofront, [valf1, valf2])
 
-    @defNLExpr(nf1, f1 - Fstar[1])
-    @defNLExpr(nf2, f2 - Fstar[2])
+    # TODO: remove nf1,2 from nbi?
+    #@defNLExpr(m, nf1, f1 - Fstar[1])
+    #@defNLExpr(m, nf2, f2 - Fstar[2])
 
-    multim.normalf1 = nf1
-    multim.normalf2 = nf2
+    #multim.normalf1 = nf1
+    #multim.normalf2 = nf2
 
     multim.Phi = Phi
     multim.Fstar = Fstar
 
     @defVar(m, t)
 
-    beta = [0.0, 1.0]
-    @addNLConstraint(m, constr1, Phi[1,2]*(beta[2]-t) == f1-Fstar[1])
-    @addNLConstraint(m, constr2, Phi[2,1]*(beta[1]-t) == f2-Fstar[2])
+    # TODO: generalise for multiobjective
+    beta = [0. 1.]
+    @defNLParam(m, β[i=1:2] == beta[i])
+    @addNLConstraint(m, constr1,
+                     Phi[1,2]*(β[2]-t) ==
+                     sensemap[f1.sense]*f1.f-Fstar[1])
+    @addNLConstraint(m, constr2,
+                     Phi[2,1]*(β[1]-t) ==
+                     sensemap[f2.sense]*f2.f-Fstar[2])
 
     # TODO: There is a bug in JuMP so it doesn't propagate all
     # the necessary information if we use @setObjective instead of NLObjective
+    # TODO: test this with nlprewrite
     @setNLObjective(m, :Max, t)
 
     betas = linspace(0,1,multim.ninitial)
 
     for b in betas[2:end-1]
-        beta[1] = b
-        beta[2] = 1-b
-        status = solve(m, ignore_solve_hook=true)
+        setValue(β, [b, 1-b])
+        status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
@@ -218,27 +223,8 @@ function solve_nbi(m::Model)
 end
 
 function solvehook(m::Model; method = :NBI, kwargs...)
-
     if method == :WS
-        # Get utopia and nadir points. Normalise functions
-        status = _solve_stage1(m)
-        if status != :Optimal
-            return status
-        end
-
-        # Perform standard normalised weighted sum
-        status = _solve_stage2(m)
-        if status != :Optimal
-            return status
-        end
-
-        # Stage 3
-        # Delete nearly overlapping solutions on the pareto front
-        # Stage 4
-        # Stage 5
-        # Stage 6
-        # Stage 7
-        # Stage 8
+        status = _solve_ws(m)
     else
         status = solve_nbi(m)
     end
