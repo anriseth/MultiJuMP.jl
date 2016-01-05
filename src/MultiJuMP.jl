@@ -4,28 +4,29 @@ module MultiJuMP
 
 using JuMP
 import Ipopt
-import JuMP: NonlinearExpression, getValue
+import JuMP: JuMPTypes, getValue
 
-export MultiModel, MultiObjective, getMultiData
+export MultiModel, SingleObjective, getMultiData
 
-type MultiObjective
+type SingleObjective
     f # JuMP-expression TODO: use JuMPTypes or something?
     sense::Symbol
-    # TODO: implement bound in algorithm
+    # TODO: implement bound and initial value in algorithm
+    initialvalue::Array{Float64}
     bound::Float64 # Hard lower/upper depending on sense
 end
 
-MultiObjective() = MultiObjective(Any, :Min, NaN)
-MultiObjective(f::NonlinearExpression) = MultiObjective(f, :Min, NaN)
-MultiObjective(f::NonlinearExpression, sense::Symbol) =
-    MultiObjective(f, symbol, NaN)
+SingleObjective() = SingleObjective(Any, :Min, Array(Float64,0), NaN)
+SingleObjective(f::JuMPTypes; sense::Symbol = :Min,
+               iv::Array{Float64} = Array(Float64,0),
+               bound::Float64 = NaN) = SingleObjective(f, sense, iv, bound)
 
-getValue(obj::MultiObjective) =  getValue(obj.f)
+getValue(obj::SingleObjective) =  getValue(obj.f)
 
 # stores extension data inside JuMP Model
 type MultiData
-    f1::MultiObjective
-    f2::MultiObjective
+    f1::SingleObjective
+    f2::SingleObjective
     normalf1
     normalf2
 
@@ -47,7 +48,7 @@ end
 function MultiModel(;solver=Ipopt.IpoptSolver())
     m = Model(solver=solver)
     m.solvehook = solvehook
-    m.ext[:Multi] = MultiData(MultiObjective(), MultiObjective(), Any, Any,
+    m.ext[:Multi] = MultiData(SingleObjective(), SingleObjective(), Any, Any,
                               10,
                               Dict[], Float64[],
                               Float64[], Dict[], Any[],
