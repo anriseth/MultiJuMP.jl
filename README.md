@@ -4,9 +4,10 @@
 
 
 ##TODO:
-- Create MultiObjective type consisting of expression and sense
-    * Include starting guesses for individual objects
-- Generalise to more than nonlinear problems?
 - Add bounds on the MultiObjective type
     * So we can ask to only search over subset of pareto front
+- Generalise biobjective -> multiobjective
+- Add option to use inequality in NBI constraint
 - Tell travis to install Ipopt
+- Create more tests
+- Generalise to more than nonlinear problems?

@@ -12,14 +12,14 @@ type SingleObjective
     f # JuMP-expression TODO: use JuMPTypes or something?
     sense::Symbol
     # TODO: implement bound and initial value in algorithm
-    initialvalue::Array{Float64}
+    initialvalue::Dict{Symbol,Any} # Variable => Initial value
     bound::Float64 # Hard lower/upper depending on sense
 end
 
-SingleObjective() = SingleObjective(Any, :Min, Array(Float64,0), NaN)
+SingleObjective() = SingleObjective(Any, :Min, Dict{Symbol,Any}(), NaN)
 SingleObjective(f::JuMPTypes; sense::Symbol = :Min,
-               iv::Array{Float64} = Array(Float64,0),
-               bound::Float64 = NaN) = SingleObjective(f, sense, iv, bound)
+                iv::Dict{Symbol,Any} = Dict{Symbol,Any}(),
+                bound::Float64 = NaN) = SingleObjective(f, sense, iv, bound)
 
 getValue(obj::SingleObjective) =  getValue(obj.f)
 
@@ -144,6 +144,9 @@ function solve_nbi(m::Model)
 
     # Individual minimisations
     @setNLObjective(m, f1.sense, f1.f)
+    for (key, value) in f1.initialvalue
+        setValue(m.varDict[key], value)
+    end
     status = solve(m, ignore_solve_hook=true);
     if status != :Optimal
         return status
@@ -159,6 +162,9 @@ function solve_nbi(m::Model)
     push!(multim.paretofront, [valf1, valf2])
 
     @setNLObjective(m, f2.sense, f2.f)
+    for (key, value) in f2.initialvalue
+        setValue(m.varDict[key], value)
+    end
     status = solve(m, ignore_solve_hook=true);
     if status != :Optimal
         return status
