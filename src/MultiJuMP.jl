@@ -200,30 +200,47 @@ function solve_nbi(m::Model)
     end
 
     # Stage 3: Solve NBI subproblems
-    # TODO: look at the NBI paper and use the algorithm for traversing the betas
-    # betas = linspace(0,1,multim.ninitial)[2:end-1]
-    # for idxnum = numobj:-1:2
-    #     for b in betas
 
-    #     end
-    # end
-
-    ###############################################
-    # CURRENTLY ONLY IMPLEMENTED FOR BIOBJECTIVE
-    ###############################################
-    betas = linspace(0,1,multim.ninitial)[2:end-1]
-    for b in betas
-        setValue([β[1], β[2]], [b, 1-b])
-        status = solve(m, ignore_solve_hook=true);
-        if status != :Optimal
-            return status
+    function traverse_chim(numpoints::Int64, iter::Array{Int64}, level::Int64 = 1)
+        # Recursive function for iterating over all the β-values
+        # TODO: make this clearer / faster?
+        nummax = numpoints-1
+        N = length(β)
+        @assert 0 < level < N
+        if level < N-2
+            # Subtract 1 from loop as we have done the
+            # individual optimisation already
+            for i = 0:nummax-sum(iter[1:level-1])-1
+                iter[level] = i
+                traverse(numpoints, β, level+1)
+            end
         end
 
-        push!(multim.paretofront, getValue(objectives))
-        push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+        for i = 0:nummax-sum(iter[1:N-2])-1
+            iter[N-1] = i
+            iter[N] = nummax - sum(iter[1:N-1])
+
+            if iter[N] == nummax
+                # We have done the individual optimisation already
+                continue
+            end
+
+            setValue(β, iter/nummax)
+            @show getValue(β)
+            status = solve(m, ignore_solve_hook=true);
+            if status != :Optimal
+                return status
+            end
+
+            push!(multim.paretofront, getValue(objectives))
+            push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+        end
+        return :Optimal
     end
 
-    return :Optimal
+    status = traverse_chim(multim.ninitial,
+                           Array{Int64}(length(objectives)))
+    return status
 end
 
 function solvehook(m::Model; method = :NBI, kwargs...)
