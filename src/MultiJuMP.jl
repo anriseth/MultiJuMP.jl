@@ -80,33 +80,37 @@ function getMultiData(m::Model)
 end
 
 function _solve_ws(m::Model)
+    # ONLY FOR BIOBJECTIVE
     multim = getMultiData(m)
-    f1 = multim.f1
-    f2 = multim.f2
+    obj1 = multim.objectives[1]
+    obj2 = multim.objectives[2]
+    multim.f1 = obj1
+    multim.f2 = obj2
+
     # Stage 1
     #Normalize the objective functions in the objective space
-    @setNLObjective(m, :Min, f1)
+    @setNLObjective(m, obj1.sense, obj1.f)
     status = solve(m, ignore_solve_hook=true)
     if status != :Optimal
         return status
     end
     push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
     push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
-    valf1 = getValue(f1)
-    valf2 = getValue(f2)
+    valf1 = getValue(obj1)
+    valf2 = getValue(obj2)
     nadir2 = valf2
     push!(multim.utopia, valf1)
     push!(multim.paretofront, [valf1, valf2])
 
-    @setNLObjective(m, :Min, f2)
+    @setNLObjective(m, obj2.sense, obj2.f)
     status = solve(m, ignore_solve_hook=true)
     if status != :Optimal
         return status
     end
     push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
     push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
-    valf1 = getValue(f1)
-    valf2 = getValue(f2)
+    valf1 = getValue(obj1)
+    valf2 = getValue(obj2)
 
     push!(multim.utopia, valf2)
     push!(multim.paretofront, [valf1, valf2])
@@ -118,8 +122,8 @@ function _solve_ws(m::Model)
     # JuMP doesn't handle divisions well, so make dummy multipliers
     multiplier1 = 1.0 / (multim.nadir[1] - multim.utopia[1])
     multiplier2 = 1.0 / (multim.nadir[2] - multim.utopia[2])
-    @defNLExpr(m, nf1, (f1 - multim.utopia[1]) * multiplier1)
-    @defNLExpr(m, nf2, (f2 - multim.utopia[2]) * multiplier2)
+    @defNLExpr(m, nf1, (obj1.f - multim.utopia[1]) * multiplier1)
+    @defNLExpr(m, nf2, (obj2.f - multim.utopia[2]) * multiplier2)
 
     multim.normalf1 = nf1
     multim.normalf2 = nf2
@@ -137,8 +141,8 @@ function _solve_ws(m::Model)
         if status != :Optimal
             return status
         end
-        valf1 = getValue(multim.f1)
-        valf2 = getValue(multim.f2)
+        valf1 = getValue(obj1)
+        valf2 = getValue(obj2)
 
         push!(multim.paretofront, [valf1, valf2])
         push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
