@@ -45,7 +45,7 @@ type MultiData
 
     # Number of points in each direction
     # of Pareto submanifold
-    ninitial::Int
+    pointsperdim::Int
     #
     # stored values
     utopiavarvalues::Array{Dict, 1}
@@ -138,12 +138,12 @@ function _solve_ws(m::Model)
     multim.normalf2 = nf2
 
     # Perform multiobjective optimization using the usual weighted sum approach
-    stepsize = 1.0 / multim.ninitial
+    stepsize = 1.0 / multim.pointsperdim
 
     @defNLParam(m, w[i=1:2] == ones(2)[i])
     @setNLObjective(m, :Min, nf1*w[1] + nf2*w[2])
 
-    weights = linspace(0,1,multim.ninitial)
+    weights = linspace(0,1,multim.pointsperdim)
     for weight in weights[2:end-1]
         setValue(w, [weight, 1-weight])
         status = solve(m, ignore_solve_hook=true)
@@ -213,7 +213,7 @@ function solve_nbi(m::Model)
     end
 
     # Stage 3: Solve NBI subproblems
-    betatree = betas(numobj, multim.ninitial-1)
+    betatree = betas(numobj, multim.pointsperdim-1)
 
     for betaval in betatree
         if countnz(betaval) == 1

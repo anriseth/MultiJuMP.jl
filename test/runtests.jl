@@ -35,13 +35,13 @@ facts("NBI optimisation") do
 
     multim = getMultiData(m)
     multim.objectives = [obj1, obj2]
-    multim.ninitial = 5
+    multim.pointsperdim = 5
     solve(m, method = :NBI)
 
     f1arr = convert(Array{Float64},
-                    [multim.paretofront[i][1] for i in 1:multim.ninitial])
+                    [multim.paretofront[i][1] for i in 1:multim.pointsperdim])
     f2arr = convert(Array{Float64},
-                    [multim.paretofront[i][2] for i in 1:multim.ninitial])
+                    [multim.paretofront[i][2] for i in 1:multim.pointsperdim])
     f1true = [0.555081, 10.0, 7.16982, 4.48665, 2.08008]
     f2true = [2.13057, -4.01115, -2.78066, -1.45458, 0.0513689]
 
