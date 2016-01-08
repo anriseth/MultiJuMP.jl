@@ -201,7 +201,7 @@ function solve_nbi(m::Model)
 
     # Stage 3: Solve NBI subproblems
 
-    function traverse_chim(numpoints::Int64, iter::Array{Int64}, level::Int64 = 1)
+    function traverse_chim(numpoints::Int, iter::Array{Int}, level::Int = 1)
         # Recursive function for iterating over all the β-values
         # TODO: make this clearer / faster?
         nummax = numpoints-1
@@ -226,7 +226,6 @@ function solve_nbi(m::Model)
             end
 
             setValue(β, iter/nummax)
-            @show getValue(β)
             status = solve(m, ignore_solve_hook=true);
             if status != :Optimal
                 return status
@@ -239,7 +238,7 @@ function solve_nbi(m::Model)
     end
 
     status = traverse_chim(multim.ninitial,
-                           Array{Int64}(length(objectives)))
+                           Array{Int}(length(objectives)))
     return status
 end
 
