@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/anriseth/MultiJuMP.jl.svg?branch=master)](https://travis-ci.org/anriseth/MultiJuMP.jl)
 
+MultiJuMP enables the user to quickly
+
 ## Usage
 As a usage example, we implement the test from
 _Das and Dennis, 1998: Normal-boundary intersection: A new method for
@@ -19,8 +21,10 @@ m = MultiModel(solver = IpoptNLSolver())
 @addNLConstraint(m, 4x[1]-2x[2]+0.8x[3]+0.6x[4]+0.5x[5]^2 == 0)
 @addNLConstraint(m, sum{x[i]^2, i=1:5} <= 10)
 
-obj1 = SingleObjective(f1)
-obj2 = SingleObjective(f2)
+iv1 = [0.3, 0.5, -0.26, -0.13, 0.28]
+obj1 = SingleObjective(f1, sense = :Max,
+                       iv = Dict{Symbol,Any}(:x => iv1))
+obj2 = SingleObjective(f2, sense = :Min)
 
 multim = getMultiData(m)
 multim.objectives = [obj1, obj2]

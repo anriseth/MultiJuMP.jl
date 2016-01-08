@@ -43,7 +43,8 @@ type MultiData
     normalf1
     normalf2
 
-    #
+    # Number of points in each direction
+    # of Pareto submanifold
     ninitial::Int
     #
     # stored values
@@ -78,6 +79,14 @@ function getMultiData(m::Model)
         error("This functionality is only available for MultiJuMP models")
     end
 end
+
+function betas(levels,parts)
+    # Sets up the tree of all possible
+    # convex combinations of the objectives
+    map(x->([x;levels+parts].-[0;x]-1)/parts,
+        combinations(1:(levels+parts-1),(levels-1)))
+end
+
 
 function _solve_ws(m::Model)
     # ONLY FOR BIOBJECTIVE
@@ -204,45 +213,24 @@ function solve_nbi(m::Model)
     end
 
     # Stage 3: Solve NBI subproblems
+    betatree = betas(numobj, multim.ninitial-1)
 
-    function traverse_chim(numpoints::Int, iter::Array{Int}, level::Int = 1)
-        # Recursive function for iterating over all the β-values
-        # TODO: make this clearer / faster?
-        nummax = numpoints-1
-        N = length(β)
-        @assert 0 < level < N
-        if level < N-2
-            # Subtract 1 from loop as we have done the
-            # individual optimisation already
-            for i = 0:nummax-sum(iter[1:level-1])-1
-                iter[level] = i
-                traverse(numpoints, β, level+1)
-            end
+    for betaval in betatree
+        if countnz(betaval) == 1
+            # Skip individual optimisations as
+            # they are already performed
+            continue
+        end
+        setValue(β, betaval)
+        status = solve(m, ignore_solve_hook=true);
+        if status != :Optimal
+            return status
         end
 
-        for i = 0:nummax-sum(iter[1:N-2])-1
-            iter[N-1] = i
-            iter[N] = nummax - sum(iter[1:N-1])
-
-            if iter[N] == nummax
-                # We have done the individual optimisation already
-                continue
-            end
-
-            setValue(β, iter/nummax)
-            status = solve(m, ignore_solve_hook=true);
-            if status != :Optimal
-                return status
-            end
-
-            push!(multim.paretofront, getValue(objectives))
-            push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
-        end
-        return :Optimal
+        push!(multim.paretofront, getValue(objectives))
+        push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
     end
 
-    status = traverse_chim(multim.ninitial,
-                           Array{Int}(length(objectives)))
     return status
 end
 
