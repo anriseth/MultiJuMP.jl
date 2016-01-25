@@ -13,6 +13,7 @@ inequality-constrained extension. (TODO: implement this option and show it here)
 
 using MultiJuMP, JuMP
 using Ipopt
+using Immerse
 
 m = MultiModel(solver = IpoptSolver())
 @defVar(m, 0 <= x[i=1:2] <= 5)
@@ -32,4 +33,28 @@ multim.objectives = [obj1, obj2]
 multim.pointsperdim = 60
 solve(m, method = :NBI)
 
-plot(multim)
+#plot(multim)
+
+function plot_comparison()
+    function pltfun(x1)
+        setValue(x[1], x1)
+        setValue(x[2:n], zeros(n-1))
+        getValue(f2)
+    end
+    pltfun(x1) = 5exp(-x1)+2exp(-0.5(x1-3)^2)
+
+    numpoints = length(multim.paretofront)
+    f1arr = convert(Array{Float64},
+                    [val[1] for val in multim.paretofront])
+    f2arr = convert(Array{Float64},
+                    [val[2] for val in multim.paretofront])
+
+    discl = layer(x=f1arr, y=f2arr, Geom.point)
+    ctsl = layer(x->pltfun(x), 0, 5,
+                 Theme(default_color=colorant"orange"))
+    plot(discl, ctsl,
+         Guide.xlabel("f<sub>1</sub>"), Guide.ylabel("f<sub>2</sub>"),
+         Guide.title("Pareto front with $numpoints points"))
+end
+
+frontplot = plot_comparison()
