@@ -246,14 +246,15 @@ function solvehook(m::Model; method = :NBI, kwargs...)
 end
 
 function plot(md::MultiData)
+    numpoints = length(md.paretofront)
     f1arr = convert(Array{Float64},
-                    [md.paretofront[i][1] for i in 1:md.pointsperdim])
+                    [val[1] for val in md.paretofront])
     f2arr = convert(Array{Float64},
-                    [md.paretofront[i][2] for i in 1:md.pointsperdim])
+                    [val[2] for val in md.paretofront])
 
     plot(x=f1arr, y=f2arr, Geom.point,
          Guide.xlabel("f<sub>1</sub>"), Guide.ylabel("f<sub>2</sub>"),
-         Guide.title("Pareto front with $(md.pointsperdim) points"))
+         Guide.title("Pareto front with $numpoints points"))
 end
 
 plot(model::Model) = plot(getMultiData(model))
