@@ -5,8 +5,9 @@ module MultiJuMP
 using JuMP
 import Ipopt
 import JuMP: JuMPTypes, getValue
+import Immerse: plot, Guide, Geom
 
-export MultiModel, SingleObjective, getMultiData
+export MultiModel, SingleObjective, getMultiData, plot
 
 type SingleObjective
     f # JuMP-expression TODO: use JuMPTypes or something?
@@ -231,7 +232,7 @@ function solve_nbi(m::Model)
         push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
     end
 
-    return status
+    return :Optimal
 end
 
 function solvehook(m::Model; method = :NBI, kwargs...)
@@ -243,5 +244,18 @@ function solvehook(m::Model; method = :NBI, kwargs...)
 
     return status
 end
+
+function plot(md::MultiData)
+    f1arr = convert(Array{Float64},
+                    [md.paretofront[i][1] for i in 1:md.pointsperdim])
+    f2arr = convert(Array{Float64},
+                    [md.paretofront[i][2] for i in 1:md.pointsperdim])
+
+    plot(x=f1arr, y=f2arr, Geom.point,
+         Guide.xlabel("f<sub>1</sub>"), Guide.ylabel("f<sub>2</sub>"),
+         Guide.title("Pareto front with $(md.pointsperdim) points"))
+end
+
+plot(model::Model) = plot(getMultiData(model))
 
 end

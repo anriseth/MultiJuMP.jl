@@ -32,14 +32,13 @@ multim.ninitial = 5
 solve(m, method = :NBI)
 ```
 
-Plot with
-
+Plot with Immerse.jl using ```nbi = plot(multim)```, or more generally:
 ```julia
 f1arr = convert(Array{Float64}, [multim.paretofront[i][1] for i in 1:multim.ninitial])
 f2arr = convert(Array{Float64}, [multim.paretofront[i][2] for i in 1:multim.ninitial])
 
 nbi = plot(x=f1arr, y=f2arr, Geom.point,
-               Guide.xlabel("f1"), Guide.ylabel("f2"))
+           Guide.xlabel("f1"), Guide.ylabel("f2"))
 ```
 ![Pareto front example](./img/pareto_example.svg)
 
@@ -48,8 +47,13 @@ nbi = plot(x=f1arr, y=f2arr, Geom.point,
 - Add bounds on the MultiObjective type
     * So we can ask to only search over subset of pareto front
     * __This seems to be causing problems__
+- Add objective `t` before the individual optimisations?
+    * Then we can warm-start the NBI subproblems after the individual runs?
+    * It seemed to cause an issue in revenue-profit optimisation,
+    where including `t` caused the algorithm to find a worse, local optimum
 - Test if multiobjective code works for three objectives
-- Implement Struss test from Das&Dennis
 - Add option to use inequality in NBI constraint?
 - Tell travis to install Ipopt
 - Create more tests (WS, 3 objectives)
+- For 3 objectives or more: Make it possible to have different spacing in the
+  components of $\beta$

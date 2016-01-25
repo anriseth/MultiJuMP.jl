@@ -1,7 +1,8 @@
 using MultiJuMP, JuMP
 using Base.Test
 using FactCheck
-using AmplNLWriter
+#using AmplNLWriter
+using Ipopt
 
 # facts("Utopia and Nadir points") do
 #     # Create model
@@ -22,7 +23,7 @@ using AmplNLWriter
 
 facts("NBI optimisation") do
     # TODO: do for WS as well
-    m = MultiModel(solver = IpoptNLSolver())
+    m = MultiModel(solver = IpoptSolver())
     @defVar(m, x[i=1:5])
     @defNLExpr(m, f1, sum{x[i]^2, i=1:5})
     @defNLExpr(m, f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3)
