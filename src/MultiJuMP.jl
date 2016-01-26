@@ -5,9 +5,10 @@ module MultiJuMP
 using JuMP
 import Ipopt
 import JuMP: JuMPTypes, getValue
-import Immerse: plot, Guide, Geom
+import Plots: scatter, scatter3d
+import Base.warn
 
-export MultiModel, SingleObjective, getMultiData, plot
+export MultiModel, SingleObjective, getMultiData, plotfront
 
 type SingleObjective
     f # JuMP-expression TODO: use JuMPTypes or something?
@@ -245,18 +246,34 @@ function solvehook(m::Model; method = :NBI, kwargs...)
     return status
 end
 
-function plot(md::MultiData)
+function plotfront(md::MultiData)
+    numobjectives = length(md.objectives)
+    if numobjectives > 3
+        Base.error("Only plotting 2d and 3d fronts")
+    end
+
     numpoints = length(md.paretofront)
     f1arr = convert(Array{Float64},
                     [val[1] for val in md.paretofront])
     f2arr = convert(Array{Float64},
                     [val[2] for val in md.paretofront])
 
-    plot(x=f1arr, y=f2arr, Geom.point,
-         Guide.xlabel("f<sub>1</sub>"), Guide.ylabel("f<sub>2</sub>"),
-         Guide.title("Pareto front with $numpoints points"))
+    if numobjectives == 2
+        retplt = scatter(x=f1arr, y=f2arr,
+                         xlabel = "f_1", ylabel = "f_2",
+                         legend = false,
+                         title = "Pareto front with $numpoints points")
+    else
+        f3arr = convert(Array{Float64},
+                        [val[3] for val in md.paretofront])
+        retplt = scatter3d(x=f1arr, y=f2arr, z=f3arr, legend = false,
+                           xlabel = "f_1", ylabel = "f_2",
+                           title = "Pareto front with $numpoints points")
+
+    end
+    return retplt
 end
 
-plot(model::Model) = plot(getMultiData(model))
+plotfront(model::Model) = plotfront(getMultiData(model))
 
 end

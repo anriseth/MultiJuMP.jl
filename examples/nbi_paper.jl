@@ -25,4 +25,6 @@ multim.objectives = [obj1, obj2]
 multim.pointsperdim = 20
 solve(m, method = :NBI)
 
-plot(multim)
+using Plots
+backend(:immerse)
+plotfront(multim)

@@ -13,7 +13,6 @@ the inequality-extended NBI method
 ==#
 
 using JuMP, MultiJuMP, Ipopt
-using Immerse
 
 m = MultiModel(solver=IpoptSolver())
 n = 30

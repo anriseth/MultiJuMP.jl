@@ -9,10 +9,8 @@ This is an example of a nonconvex Pareto front, where the weighted sum method
 would not work.
 ==#
 using JuMP, MultiJuMP, Ipopt
-using Immerse
-using AmplNLWriter # TODO: file bug error for AmplNLWriter here (works with Ipopt)
 
-m = MultiModel(solver=IpoptNLSolver())
+m = MultiModel(solver=IpoptSolver())
 n = 30
 
 l = -ones(n); l[1] = 0
@@ -32,4 +30,4 @@ multim.objectives = [obj1, obj2]
 multim.pointsperdim = 30
 solve(m, method = :NBI)
 
-plot(multim)
+plotfront(multim)

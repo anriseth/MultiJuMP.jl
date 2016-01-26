@@ -10,10 +10,8 @@ We can make sure all NBI points are locally Pareto optimal by using an
 inequality-constrained extension. (TODO: implement this option and show it here)
 ==#
 
-
 using MultiJuMP, JuMP
 using Ipopt
-using Immerse
 
 m = MultiModel(solver = IpoptSolver())
 @defVar(m, 0 <= x[i=1:2] <= 5)
@@ -33,7 +31,7 @@ multim.objectives = [obj1, obj2]
 multim.pointsperdim = 60
 solve(m, method = :NBI)
 
-#plot(multim)
+#plotfront(multim)
 
 function plot_comparison()
     function pltfun(x1)

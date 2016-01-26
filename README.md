@@ -2,18 +2,24 @@
 
 [![Build Status](https://travis-ci.org/anriseth/MultiJuMP.jl.svg?branch=master)](https://travis-ci.org/anriseth/MultiJuMP.jl)
 
-MultiJuMP enables the user to quickly
+MultiJuMP enables the user to easily run multiobjective optimisation problems
+and generate Pareto fronts. The code is built as an extension of
+[https://github.com/JuliaOpt/JuMP.jl](JuMP).
+We use the Normal Boundary Intersection method to trace out the Pareto front.
+
 
 ## Usage
+Have a look in the `examples/` directory for different use cases, including
+tri-objective Pareto fronts.
 As a usage example, we implement the test from
 _Das and Dennis, 1998: Normal-boundary intersection: A new method for
 generating the Pareto surface in nonlinear multicriteria optimization problems_:
 
 ```julia
 using MultiJuMP, JuMP
-using AmplNLWriter
+using Ipopt
 
-m = MultiModel(solver = IpoptNLSolver())
+m = MultiModel(solver = IpoptSolver())
 @defVar(m, x[i=1:5])
 @defNLExpr(m, f1, sum{x[i]^2, i=1:5})
 @defNLExpr(m, f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3)
@@ -51,8 +57,8 @@ nbi = plot(x=f1arr, y=f2arr, Geom.point,
     * Then we can warm-start the NBI subproblems after the individual runs?
     * It seemed to cause an issue in revenue-profit optimisation,
     where including `t` caused the algorithm to find a worse, local optimum
-- Test if multiobjective code works for three objectives
 - Add option to use inequality in NBI constraint?
+- Do the plotting with Immerse?
 - Tell travis to install Ipopt
 - Create more tests (WS, 3 objectives)
 - For 3 objectives or more: Make it possible to have different spacing in the
