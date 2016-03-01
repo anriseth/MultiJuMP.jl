@@ -5,8 +5,11 @@
 MultiJuMP enables the user to easily run multiobjective optimisation problems
 and generate Pareto fronts. The code is built as an extension of
 [https://github.com/JuliaOpt/JuMP.jl](JuMP).
-We use the Normal Boundary Intersection method to trace out the Pareto front.
-
+We have implemented three ways to trace out the Pareto front:
+- Normal Boundary Intersection (`solve(m, method = :NBI)`)
+- Weighted sums (`solve(m, method = :WS)`)
+- Constraint methods (`solve(m, method = :EPS)`)
+    * This method only works for biobjective optimisation as of now
 
 ## Usage
 Have a look in the `examples/` directory for different use cases, including
@@ -35,7 +38,7 @@ obj2 = SingleObjective(f2, sense = :Min)
 multim = getMultiData(m)
 multim.objectives = [obj1, obj2]
 multim.ninitial = 5
-solve(m, method = :NBI)
+solve(m, method = :NBI) # method = :WS or method = :EPS
 ```
 
 Plot with Immerse.jl using ```nbi = plot(multim)```, or more generally:

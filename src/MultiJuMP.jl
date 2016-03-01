@@ -237,10 +237,74 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
 end
 
 function _solve_eps(m::Model)
-    Base.error("Not implemented")
-    # TODO: test inequalityconstraint thing on nbi
-    # TODO:
-    # Sort it out
+    multim = getMultiData(m)
+    objectives = multim.objectives
+    const sensemap = Dict(:Min => 1.0, :Max => -1.0)
+
+    numobj = length(objectives)
+    Phi = zeros(numobj,numobj)
+
+    if numobj > 2
+        # TODO:
+        # The logic  here becomes difficult, as the feasible region will require
+        # a dependency between the constraints
+        Base.error("Not thought through for > 2 objectives yet")
+    end
+
+    # Individual minimisations
+    for (i, objective) in enumerate(objectives)
+        @setNLObjective(m, objective.sense, objective.f)
+        for (key, value) in objective.initialvalue
+            setValue(m.varDict[key], value)
+        end
+        status = solve(m, ignore_solve_hook=true);
+        if status != :Optimal
+            return status
+        end
+
+        push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+        push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+
+        Phi[:,i] = senseValue(objectives)
+
+        push!(multim.paretofront, getValue(objectives))
+    end
+    Fmax = maximum(Phi,2)
+    Fmin = minimum(Phi,2) # == diag(Phi)?
+
+    multim.Phi = Phi
+
+    @setNLObjective(m, objectives[end].sense, objectives[end].f)
+
+    beta = zeros(numobj); beta[end] = 1.0
+    @defNLParam(m, β[i=1:numobj] == beta[i])
+
+    @addNLConstraint(m, objconstr[i=1:numobj-1],
+                     sensemap[objectives[i].sense]*objectives[i].f
+                     <= β[i]*Fmin[i]+(1-β[i])*Fmax[i])
+
+    betatree = betas(numobj, multim.pointsperdim-1)
+
+    for betaval in betatree
+        if countnz(betaval) == 1
+            # Skip individual optimisations as
+            # they are already performed
+            continue
+        end
+
+        setValue(β, betaval)
+
+        status = solve(m, ignore_solve_hook=true);
+        if status != :Optimal
+            return status
+        end
+
+        push!(multim.paretofront, getValue(objectives))
+        push!(multim.paretovarvalues,
+              Dict([key => getValue(val) for (key, val) in m.varDict]))
+    end
+
+    return :Optimal
 end
 
 function solvehook(m::Model; method::Symbol = :NBI,
