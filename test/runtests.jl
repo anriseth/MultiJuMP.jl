@@ -86,3 +86,9 @@ facts("TODO: Initial value test") do
     # check that initial value gives correct minima
     @fact 1 --> 1
 end
+
+facts("TODO: NBI Inequality test") do
+    # TODO: Test that the inequality-extension of NBI works
+    # We can use the nc_paper_2.jl example
+    @fact 1 --> 1
+end

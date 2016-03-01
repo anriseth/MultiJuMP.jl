@@ -25,6 +25,17 @@ multim.objectives = [obj1, obj2]
 multim.pointsperdim = 20
 solve(m, method = :NBI)
 
-using Plots
-backend(:immerse)
-plotfront(multim)
+#using Plots
+#backend(:immerse)
+#plotfront(multim)
+using Immerse
+numpoints = length(multim.paretofront)
+f1arr = convert(Array{Float64},
+                [val[1] for val in multim.paretofront])
+f2arr = convert(Array{Float64},
+                [val[2] for val in multim.paretofront])
+
+plot(x=f1arr, y=f2arr,
+     Guide.xlabel("f<sub>1</sub>"),
+     Guide.ylabel("f<sub>2</sub>"),
+     Guide.title("Pareto front with $numpoints points"))

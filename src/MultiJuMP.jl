@@ -135,7 +135,7 @@ function _solve_ws(m::Model)
             # they are already performed
             continue
         end
-        @show betaval
+
         setValue(β, betaval)
 
         status = solve(m, ignore_solve_hook=true);
@@ -147,10 +147,10 @@ function _solve_ws(m::Model)
         push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
     end
 
-    return :Optimal # TODO: find a better way to do this?
+    return :Optimal
 end
 
-function solve_nbi(m::Model)
+function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
     multim = getMultiData(m)
     objectives = multim.objectives
     const sensemap = Dict(:Min => 1.0, :Max => -1.0)
@@ -195,11 +195,23 @@ function solve_nbi(m::Model)
 
     beta = zeros(numobj); beta[end] = 1.0
     @defNLParam(m, β[i=1:numobj] == beta[i])
-    for (i, objective) in enumerate(objectives)
-        @addNLConstraint(m, nbiconstr,
-                         sum{Phi[i,j]*(β[j]-t),
-                         j=1:numobj; j != i} ==
-                         sensemap[objective.sense]*objective.f-Fstar[i])
+
+    if inequalityconstraint == false
+        # Standard NBI
+        for (i, objective) in enumerate(objectives)
+            @addNLConstraint(m, nbiconstr,
+                             sum{Phi[i,j]*(β[j]-t),
+                             j=1:numobj; j != i} ==
+                             sensemap[objective.sense]*objective.f-Fstar[i])
+        end
+    else
+        # Pascoletti-Serafini extension
+        for (i, objective) in enumerate(objectives)
+            @addNLConstraint(m, nbiconstr,
+                             sum{Phi[i,j]*(β[j]-t),
+                             j=1:numobj; j != i} >=
+                             sensemap[objective.sense]*objective.f-Fstar[i])
+        end
     end
 
     # Stage 3: Solve NBI subproblems
@@ -231,7 +243,8 @@ function _solve_eps(m::Model)
     # Sort it out
 end
 
-function solvehook(m::Model; method = :NBI, kwargs...)
+function solvehook(m::Model; method::Symbol = :NBI,
+                   inequalityconstraint::Bool = false, kwargs...)
     if method == :WS
         # Weighted sums
         status = _solve_ws(m)
@@ -240,7 +253,7 @@ function solvehook(m::Model; method = :NBI, kwargs...)
         status = _solve_eps(m)
     elseif method == :NBI
         # Normal boundary intersection
-        status = _solve_nbi(m)
+        status = _solve_nbi(m, inequalityconstraint)
     else
         Base.error("Multiobjective method not recognized.")
     end

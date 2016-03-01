@@ -30,7 +30,7 @@ obj2 = SingleObjective(f2, sense = :Min,
 multim = getMultiData(m)
 multim.objectives = [obj1, obj2]
 multim.pointsperdim = 60
-solve(m, method = :NBI)
+solve(m, method = :NBI, inequalityconstraint = true)
 
 #plotfront(multim)
 
