@@ -1,4 +1,4 @@
 julia 0.4
-JuMP 0.11
+JuMP 0.12
 Ipopt
 

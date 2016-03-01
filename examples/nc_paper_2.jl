@@ -12,6 +12,7 @@ inequality-constrained extension. (TODO: implement this option and show it here)
 
 using MultiJuMP, JuMP
 using Ipopt
+using Immerse
 
 m = MultiModel(solver = IpoptSolver())
 @defVar(m, 0 <= x[i=1:2] <= 5)

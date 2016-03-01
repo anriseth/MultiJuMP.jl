@@ -13,8 +13,8 @@ export MultiModel, SingleObjective, getMultiData, plotfront
 type SingleObjective
     f # JuMP-expression TODO: use JuMPTypes or something?
     sense::Symbol
-    # TODO: implement bound and initial value in algorithm
     initialvalue::Dict{Symbol,Any} # Variable => Initial value
+    # TODO: implement bound in algorithm
     bound::Float64 # Hard lower/upper depending on sense
 end
 
@@ -89,73 +89,61 @@ function betas(levels,parts)
         combinations(1:(levels+parts-1),(levels-1)))
 end
 
-
 function _solve_ws(m::Model)
-    # ONLY FOR BIOBJECTIVE
     multim = getMultiData(m)
-    obj1 = multim.objectives[1]
-    obj2 = multim.objectives[2]
-    multim.f1 = obj1
-    multim.f2 = obj2
+    objectives = multim.objectives
+    const sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
-    # Stage 1
-    #Normalize the objective functions in the objective space
-    @setNLObjective(m, obj1.sense, obj1.f)
-    status = solve(m, ignore_solve_hook=true)
-    if status != :Optimal
-        return status
-    end
-    push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
-    push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
-    valf1 = getValue(obj1)
-    valf2 = getValue(obj2)
-    nadir2 = valf2
-    push!(multim.utopia, valf1)
-    push!(multim.paretofront, [valf1, valf2])
+    numobj = length(objectives)
+    Phi = zeros(numobj,numobj)
 
-    @setNLObjective(m, obj2.sense, obj2.f)
-    status = solve(m, ignore_solve_hook=true)
-    if status != :Optimal
-        return status
-    end
-    push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
-    push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
-    valf1 = getValue(obj1)
-    valf2 = getValue(obj2)
-
-    push!(multim.utopia, valf2)
-    push!(multim.paretofront, [valf1, valf2])
-
-    # Add nadir. [with > 2 objectives, we need to use utopiavarvalues and a loop]
-    push!(multim.nadir, valf1, nadir2)
-
-    # TODO: redo nf{1,2}: We don't need the multim.utopia[i] subtraction
-    # JuMP doesn't handle divisions well, so make dummy multipliers
-    multiplier1 = 1.0 / (multim.nadir[1] - multim.utopia[1])
-    multiplier2 = 1.0 / (multim.nadir[2] - multim.utopia[2])
-    @defNLExpr(m, nf1, (obj1.f - multim.utopia[1]) * multiplier1)
-    @defNLExpr(m, nf2, (obj2.f - multim.utopia[2]) * multiplier2)
-
-    multim.normalf1 = nf1
-    multim.normalf2 = nf2
-
-    # Perform multiobjective optimization using the usual weighted sum approach
-    stepsize = 1.0 / multim.pointsperdim
-
-    @defNLParam(m, w[i=1:2] == ones(2)[i])
-    @setNLObjective(m, :Min, nf1*w[1] + nf2*w[2])
-
-    weights = linspace(0,1,multim.pointsperdim)
-    for weight in weights[2:end-1]
-        setValue(w, [weight, 1-weight])
-        status = solve(m, ignore_solve_hook=true)
+    # Individual minimisations
+    for (i, objective) in enumerate(objectives)
+        @setNLObjective(m, objective.sense, objective.f)
+        for (key, value) in objective.initialvalue
+            setValue(m.varDict[key], value)
+        end
+        status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
-        valf1 = getValue(obj1)
-        valf2 = getValue(obj2)
 
-        push!(multim.paretofront, [valf1, valf2])
+        push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+        push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+
+        Phi[:,i] = senseValue(objectives)
+
+        push!(multim.paretofront, getValue(objectives))
+    end
+    Fmax = maximum(Phi,2)
+    Fmin = minimum(Phi,2) # == diag(Phi)?
+
+    multim.Phi = Phi
+
+    beta = zeros(numobj); beta[end] = 1.0
+    @defNLParam(m, β[i=1:numobj] == beta[i])
+
+    @setNLObjective(m, :Min,
+                    sum{β[i]*(sensemap[objectives[i].sense]*objectives[i].f -
+                              Fmin[i])/(Fmax[i]-Fmin[i]), i=1:numobj})
+
+    betatree = betas(numobj, multim.pointsperdim-1)
+
+    for betaval in betatree
+        if countnz(betaval) == 1
+            # Skip individual optimisations as
+            # they are already performed
+            continue
+        end
+        @show betaval
+        setValue(β, betaval)
+
+        status = solve(m, ignore_solve_hook=true);
+        if status != :Optimal
+            return status
+        end
+
+        push!(multim.paretofront, getValue(objectives))
         push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
     end
 
@@ -236,11 +224,25 @@ function solve_nbi(m::Model)
     return :Optimal
 end
 
+function _solve_eps(m::Model)
+    Base.error("Not implemented")
+    # TODO: test inequalityconstraint thing on nbi
+    # TODO:
+    # Sort it out
+end
+
 function solvehook(m::Model; method = :NBI, kwargs...)
     if method == :WS
+        # Weighted sums
         status = _solve_ws(m)
+    elseif method == :EPS
+        # Epsilon constraint method
+        status = _solve_eps(m)
+    elseif method == :NBI
+        # Normal boundary intersection
+        status = _solve_nbi(m)
     else
-        status = solve_nbi(m)
+        Base.error("Multiobjective method not recognized.")
     end
 
     return status
