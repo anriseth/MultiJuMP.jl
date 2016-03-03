@@ -22,7 +22,6 @@ using Ipopt
 
 
 facts("NBI optimisation") do
-    # TODO: do for WS as well
     m = MultiModel(solver = IpoptSolver(print_level=0))
     @defVar(m, x[i=1:5])
     @defNLExpr(m, f1, sum{x[i]^2, i=1:5})

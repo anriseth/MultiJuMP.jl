@@ -49,7 +49,10 @@ f2arr = convert(Array{Float64}, [multim.paretofront[i][2] for i in 1:multim.nini
 nbi = plot(x=f1arr, y=f2arr, Geom.point,
            Guide.xlabel("f1"), Guide.ylabel("f2"))
 ```
-![Pareto front example](./img/pareto_example.svg)
+<!-- Github bug
+![Pareto front example](./img/pareto_example.svg) -->
+![Pareto front example](https://cdn.rawgit.com/anriseth/MultiJuMP.jl/master/img/pareto_example.svg)
+
 
 
 ##TODO:
