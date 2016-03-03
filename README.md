@@ -11,6 +11,9 @@ We have implemented three ways to trace out the Pareto front:
 - Constraint methods (`solve(m, method = :EPS)`)
     * This method only works for biobjective optimisation as of now
 
+## Installation
+In Julia, call `Pkg.clone("https://github.com/anriseth/MultiJuMP.jl.git")` to install MultiJuMP.
+
 ## Usage
 Have a look in the `examples/` directory for different use cases, including
 tri-objective Pareto fronts.
@@ -56,16 +59,13 @@ nbi = plot(x=f1arr, y=f2arr, Geom.point,
 
 
 ##TODO:
-- Add bounds on the MultiObjective type
-    * So we can ask to only search over subset of pareto front
-    * __This seems to be causing problems__
+- Tell travis to install Ipopt
+- Create 3 objective test for :EPS, :NBI and :WS
+- Add bounds on the MultiObjective type (So we can ask to only search over subset of pareto front )
+    * __This seems to be causing problems for NBI__
 - Add objective `t` before the individual optimisations?
     * Then we can warm-start the NBI subproblems after the individual runs?
     * It seemed to cause an issue in revenue-profit optimisation,
     where including `t` caused the algorithm to find a worse, local optimum
-- Add option to use inequality in NBI constraint?
-- Do the plotting with Immerse?
-- Tell travis to install Ipopt
-- Create more tests (WS, 3 objectives)
 - For 3 objectives or more: Make it possible to have different spacing in the
   components of $\beta$
