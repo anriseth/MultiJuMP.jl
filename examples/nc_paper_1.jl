@@ -14,10 +14,10 @@ using MultiJuMP, JuMP
 using Ipopt
 
 m = MultiModel(solver = IpoptSolver())
-@defVar(m, x[i=1:2])
-@defNLExpr(m, f1, x[1])
-@defNLExpr(m, f2, x[2])
-@addNLConstraint(m, ((x[1]-20)/20)^8+(x[2]-1)^8 <= 1)
+@variable(m, x[i=1:2])
+@NLexpression(m, f1, x[1])
+@NLexpression(m, f2, x[2])
+@NLconstraint(m, ((x[1]-20)/20)^8+(x[2]-1)^8 <= 1)
 
 obj1 = SingleObjective(f1, sense = :Min)
 obj2 = SingleObjective(f2, sense = :Min)

@@ -99,7 +99,7 @@ function _solve_ws(m::Model)
 
     # Individual minimisations
     for (i, objective) in enumerate(objectives)
-        @setNLObjective(m, objective.sense, objective.f)
+        @NLobjective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
             setValue(m.varDict[key], value)
         end
@@ -121,11 +121,11 @@ function _solve_ws(m::Model)
     multim.Phi = Phi
 
     beta = zeros(numobj); beta[end] = 1.0
-    @defNLParam(m, β[i=1:numobj] == beta[i])
+    @NLparameter(m, β[i=1:numobj] == beta[i])
 
-    @setNLObjective(m, :Min,
-                    sum{β[i]*(sensemap[objectives[i].sense]*objectives[i].f -
-                              Fmin[i])/(Fmax[i]-Fmin[i]), i=1:numobj})
+    @NLobjective(m, :Min,
+                 sum{β[i]*(sensemap[objectives[i].sense]*objectives[i].f -
+                           Fmin[i])/(Fmax[i]-Fmin[i]), i=1:numobj})
 
     betatree = betas(numobj, multim.pointsperdim-1)
 
@@ -162,7 +162,7 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
 
     # Individual minimisations
     for (i, objective) in enumerate(objectives)
-        @setNLObjective(m, objective.sense, objective.f)
+        @NLobjective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
             setValue(m.varDict[key], value)
         end
@@ -187,30 +187,30 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
     multim.Fstar = Fstar
 
     # Stage 2: Create NBI subproblems
-    @defVar(m, t)
+    @variable(m, t)
     # TODO: There is a bug in JuMP so it doesn't propagate all
-    # the necessary information if we use @setObjective instead of NLObjective
+    # the necessary information if we use @objective instead of NLObjective
     # TODO: test this with nlprewrite
-    @setNLObjective(m, :Max, t)
+    @NLobjective(m, :Max, t)
 
     beta = zeros(numobj); beta[end] = 1.0
-    @defNLParam(m, β[i=1:numobj] == beta[i])
+    @NLparameter(m, β[i=1:numobj] == beta[i])
 
     if inequalityconstraint == false
         # Standard NBI
         for (i, objective) in enumerate(objectives)
-            @addNLConstraint(m, nbiconstr,
-                             sum{Phi[i,j]*(β[j]-t),
-                             j=1:numobj; j != i} ==
-                             sensemap[objective.sense]*objective.f-Fstar[i])
+            @NLconstraint(m, nbiconstr,
+                          sum{Phi[i,j]*(β[j]-t),
+                              j=1:numobj; j != i} ==
+                          sensemap[objective.sense]*objective.f-Fstar[i])
         end
     else
         # Pascoletti-Serafini extension
         for (i, objective) in enumerate(objectives)
-            @addNLConstraint(m, nbiconstr,
-                             sum{Phi[i,j]*(β[j]-t),
-                             j=1:numobj; j != i} >=
-                             sensemap[objective.sense]*objective.f-Fstar[i])
+            @NLconstraint(m, nbiconstr,
+                          sum{Phi[i,j]*(β[j]-t),
+                              j=1:numobj; j != i} >=
+                          sensemap[objective.sense]*objective.f-Fstar[i])
         end
     end
 
@@ -253,7 +253,7 @@ function _solve_eps(m::Model)
 
     # Individual minimisations
     for (i, objective) in enumerate(objectives)
-        @setNLObjective(m, objective.sense, objective.f)
+        @NLobjective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
             setValue(m.varDict[key], value)
         end
@@ -274,14 +274,14 @@ function _solve_eps(m::Model)
 
     multim.Phi = Phi
 
-    @setNLObjective(m, objectives[end].sense, objectives[end].f)
+    @NLobjective(m, objectives[end].sense, objectives[end].f)
 
     beta = zeros(numobj); beta[end] = 1.0
-    @defNLParam(m, β[i=1:numobj] == beta[i])
+    @NLparameter(m, β[i=1:numobj] == beta[i])
 
-    @addNLConstraint(m, objconstr[i=1:numobj-1],
-                     sensemap[objectives[i].sense]*objectives[i].f
-                     <= β[i]*Fmin[i]+(1-β[i])*Fmax[i])
+    @NLconstraint(m, objconstr[i=1:numobj-1],
+                  sensemap[objectives[i].sense]*objectives[i].f
+                  <= β[i]*Fmin[i]+(1-β[i])*Fmax[i])
 
     betatree = betas(numobj, multim.pointsperdim-1)
 
@@ -336,7 +336,6 @@ function plotfront(md::MultiData)
                     [val[1] for val in md.paretofront])
     f2arr = convert(Array{Float64},
                     [val[2] for val in md.paretofront])
-
     if numobjectives == 2
         retplt = scatter(x=f1arr, y=f2arr,
                          xlabel = "f_1", ylabel = "f_2",

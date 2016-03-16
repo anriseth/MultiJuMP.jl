@@ -19,11 +19,11 @@ n = 30
 
 l = -ones(n); l[1] = 0
 u = ones(n)
-@defVar(m, l[i] <= x[i=1:n] <= u[i])
-@defNLExpr(m, f1, x[1])
-@defNLExpr(m, g, 1 + 9*sum{x[j]^2, j=2:n}/(n-1))
-@defNLExpr(m, h, 1 - sqrt((f1/g)) - (f1/g)*sin(10*π*f1))
-@defNLExpr(m, f2, g*h)
+@variable(m, l[i] <= x[i=1:n] <= u[i])
+@NLexpression(m, f1, x[1])
+@NLexpression(m, g, 1 + 9*sum{x[j]^2, j=2:n}/(n-1))
+@NLexpression(m, h, 1 - sqrt((f1/g)) - (f1/g)*sin(10*π*f1))
+@NLexpression(m, f2, g*h)
 
 iv1 = zeros(n)
 obj1 = SingleObjective(f1, sense = :Min,

@@ -17,11 +17,11 @@ using JLD
 
 m = MultiModel(solver = IpoptSolver())
 
-@defVar(m, x[i=1:3] >= 0)
-@defNLExpr(m, f1, x[1])
-@defNLExpr(m, f2, x[2])
-@defNLExpr(m, f3, x[3])
-@addNLConstraint(m, x[1]^4+2x[2]^3+5x[3]^2<=1)
+@variable(m, x[i=1:3] >= 0)
+@NLexpression(m, f1, x[1])
+@NLexpression(m, f2, x[2])
+@NLexpression(m, f3, x[3])
+@NLconstraint(m, x[1]^4+2x[2]^3+5x[3]^2<=1)
 
 obj1 = SingleObjective(f1, sense = :Max)#,
                        #iv = Dict{Symbol, Any}(:x => [0, 0., 1.2]))

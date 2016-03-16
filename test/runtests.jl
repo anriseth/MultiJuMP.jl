@@ -7,9 +7,9 @@ using Ipopt
 # facts("Utopia and Nadir points") do
 #     # Create model
 #     m = MultiModel()
-#     @defVar(m, -1 <= x <= 1)
-#     @defNLExpr(m, f1, x^2)
-#     @defNLExpr(m, f2, (x-0.5)^2)
+#     @variable(m, -1 <= x <= 1)
+#     @NLexpression(m, f1, x^2)
+#     @NLexpression(m, f2, (x-0.5)^2)
 
 #     multim = getMultiData(m)
 #     multim.f1 = f1
@@ -23,12 +23,12 @@ using Ipopt
 
 facts("NBI optimisation") do
     m = MultiModel(solver = IpoptSolver(print_level=0))
-    @defVar(m, x[i=1:5])
-    @defNLExpr(m, f1, sum{x[i]^2, i=1:5})
-    @defNLExpr(m, f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3)
-    @addNLConstraint(m, x[1]+2x[2]-x[3]-0.5x[4]+x[5]==2)
-    @addNLConstraint(m, 4x[1]-2x[2]+0.8x[3]+0.6x[4]+0.5x[5]^2 == 0)
-    @addNLConstraint(m, sum{x[i]^2, i=1:5} <= 10)
+    @variable(m, x[i=1:5])
+    @NLexpression(m, f1, sum{x[i]^2, i=1:5})
+    @NLexpression(m, f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3)
+    @NLconstraint(m, x[1]+2x[2]-x[3]-0.5x[4]+x[5]==2)
+    @NLconstraint(m, 4x[1]-2x[2]+0.8x[3]+0.6x[4]+0.5x[5]^2 == 0)
+    @NLconstraint(m, sum{x[i]^2, i=1:5} <= 10)
 
     obj1 = SingleObjective(f1)
     obj2 = SingleObjective(f2)
@@ -51,12 +51,12 @@ end
 
 facts("WS optimisation") do
     m = MultiModel(solver = IpoptSolver(print_level=0))
-    @defVar(m, x[i=1:5])
-    @defNLExpr(m, f1, sum{x[i]^2, i=1:5})
-    @defNLExpr(m, f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3)
-    @addNLConstraint(m, x[1]+2x[2]-x[3]-0.5x[4]+x[5]==2)
-    @addNLConstraint(m, 4x[1]-2x[2]+0.8x[3]+0.6x[4]+0.5x[5]^2 == 0)
-    @addNLConstraint(m, sum{x[i]^2, i=1:5} <= 10)
+    @variable(m, x[i=1:5])
+    @NLexpression(m, f1, sum{x[i]^2, i=1:5})
+    @NLexpression(m, f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3)
+    @NLconstraint(m, x[1]+2x[2]-x[3]-0.5x[4]+x[5]==2)
+    @NLconstraint(m, 4x[1]-2x[2]+0.8x[3]+0.6x[4]+0.5x[5]^2 == 0)
+    @NLconstraint(m, sum{x[i]^2, i=1:5} <= 10)
 
     obj1 = SingleObjective(f1)
     obj2 = SingleObjective(f2)
@@ -79,12 +79,12 @@ end
 
 facts("EPS optimisation") do
     m = MultiModel(solver = IpoptSolver(print_level=0))
-    @defVar(m, x[i=1:5])
-    @defNLExpr(m, f1, sum{x[i]^2, i=1:5})
-    @defNLExpr(m, f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3)
-    @addNLConstraint(m, x[1]+2x[2]-x[3]-0.5x[4]+x[5]==2)
-    @addNLConstraint(m, 4x[1]-2x[2]+0.8x[3]+0.6x[4]+0.5x[5]^2 == 0)
-    @addNLConstraint(m, sum{x[i]^2, i=1:5} <= 10)
+    @variable(m, x[i=1:5])
+    @NLexpression(m, f1, sum{x[i]^2, i=1:5})
+    @NLexpression(m, f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3)
+    @NLconstraint(m, x[1]+2x[2]-x[3]-0.5x[4]+x[5]==2)
+    @NLconstraint(m, 4x[1]-2x[2]+0.8x[3]+0.6x[4]+0.5x[5]^2 == 0)
+    @NLconstraint(m, sum{x[i]^2, i=1:5} <= 10)
 
     obj1 = SingleObjective(f1)
     obj2 = SingleObjective(f2)

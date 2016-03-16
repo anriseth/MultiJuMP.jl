@@ -11,11 +11,11 @@ using MultiJuMP, JuMP
 using Ipopt
 
 m = MultiModel(solver = IpoptSolver())
-@defVar(m, 0 <= x[i=1:2] <= π)
-@defNLExpr(m, f1, x[1])
-@defNLExpr(m, f2, x[2])
-@addNLConstraint(m, x[1]^2+x[2]^2 -1 - 0.1cos(16atan(x[1]/x[2])) >= 0)
-@addNLConstraint(m, (x[1]-0.5)^2+(x[2]-0.5)^2 <= 0.5)
+@variable(m, 0 <= x[i=1:2] <= π)
+@NLexpression(m, f1, x[1])
+@NLexpression(m, f2, x[2])
+@NLconstraint(m, x[1]^2+x[2]^2 -1 - 0.1cos(16atan(x[1]/x[2])) >= 0)
+@NLconstraint(m, (x[1]-0.5)^2+(x[2]-0.5)^2 <= 0.5)
 
 obj1 = SingleObjective(f1, sense = :Min,
                        iv = Dict{Symbol, Any}(:x => [0., 1.]))

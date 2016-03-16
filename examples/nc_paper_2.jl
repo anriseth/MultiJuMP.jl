@@ -7,7 +7,7 @@ Structural and multidisciplinary optimization, 25(2):86–98, 2003.
 This example shows that the NBI method will generate local Pareto points that
 are not global and dominated points that are not locally optimal.
 We can make sure all NBI points are locally Pareto optimal by using an
-inequality-constrained extension. (TODO: implement this option and show it here)
+inequality-constrained extension.
 ==#
 
 using MultiJuMP, JuMP
@@ -15,10 +15,10 @@ using Ipopt
 using Immerse
 
 m = MultiModel(solver = IpoptSolver())
-@defVar(m, 0 <= x[i=1:2] <= 5)
-@defNLExpr(m, f1, x[1])
-@defNLExpr(m, f2, x[2])
-@addNLConstraint(m, 5exp(-x[1])+2exp(-0.5(x[1]-3)^2) <= x[2])
+@variable(m, 0 <= x[i=1:2] <= 5)
+@NLexpression(m, f1, x[1])
+@NLexpression(m, f2, x[2])
+@NLconstraint(m, 5exp(-x[1])+2exp(-0.5(x[1]-3)^2) <= x[2])
 
 obj1 = SingleObjective(f1, sense = :Min)
 
@@ -30,7 +30,9 @@ obj2 = SingleObjective(f2, sense = :Min,
 multim = getMultiData(m)
 multim.objectives = [obj1, obj2]
 multim.pointsperdim = 60
+#
 solve(m, method = :NBI, inequalityconstraint = true)
+#solve(m, method = :NBI)
 
 #plotfront(multim)
 
