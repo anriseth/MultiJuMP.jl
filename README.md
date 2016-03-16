@@ -33,21 +33,24 @@ m = MultiModel(solver = IpoptSolver())
 @addNLConstraint(m, 4x[1]-2x[2]+0.8x[3]+0.6x[4]+0.5x[5]^2 == 0)
 @addNLConstraint(m, sum{x[i]^2, i=1:5} <= 10)
 
-iv1 = [0.3, 0.5, -0.26, -0.13, 0.28]
-obj1 = SingleObjective(f1, sense = :Max,
+iv1 = [0.3, 0.5, -0.26, -0.13, 0.28] # Initial guess
+obj1 = SingleObjective(f1, sense = :Min,
                        iv = Dict{Symbol,Any}(:x => iv1))
 obj2 = SingleObjective(f2, sense = :Min)
 
-multim = getMultiData(m)
-multim.objectives = [obj1, obj2]
-multim.ninitial = 5
+md = getMultiData(m)
+md.objectives = [obj1, obj2]
+md.pointsperdim = 20
 solve(m, method = :NBI) # method = :WS or method = :EPS
 ```
 
-Plot with Immerse.jl using ```nbi = plot(multim)```, or more generally:
+Plot with Plots.jl using ```plotfront(md)```, or more generally:
 ```julia
-f1arr = convert(Array{Float64}, [multim.paretofront[i][1] for i in 1:multim.ninitial])
-f2arr = convert(Array{Float64}, [multim.paretofront[i][2] for i in 1:multim.ninitial])
+using Gadfly
+f1arr = convert(Array{Float64},
+                [val[1] for val in md.paretofront])
+f2arr = convert(Array{Float64},
+                [val[2] for val in md.paretofront])
 
 nbi = plot(x=f1arr, y=f2arr, Geom.point,
            Guide.xlabel("f1"), Guide.ylabel("f2"))
@@ -55,7 +58,6 @@ nbi = plot(x=f1arr, y=f2arr, Geom.point,
 <!-- Github bug
 ![Pareto front example](./img/pareto_example.svg) -->
 ![Pareto front example](https://cdn.rawgit.com/anriseth/MultiJuMP.jl/master/img/pareto_example.svg)
-
 
 
 ##TODO:
@@ -69,3 +71,4 @@ nbi = plot(x=f1arr, y=f2arr, Geom.point,
     where including `t` caused the algorithm to find a worse, local optimum
 - For 3 objectives or more: Make it possible to have different spacing in the
   components of $\beta$
+- Implement Eichfelder algorithm?
