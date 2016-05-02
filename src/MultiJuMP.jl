@@ -4,7 +4,7 @@ module MultiJuMP
 
 using JuMP
 import Ipopt
-import JuMP: JuMPTypes, getValue
+import JuMP: JuMPTypes, getvalue
 import Plots: scatter, scatter3d
 import Base.warn
 
@@ -23,18 +23,18 @@ SingleObjective(f::JuMPTypes; sense::Symbol = :Min,
                 iv::Dict{Symbol,Any} = Dict{Symbol,Any}(),
                 bound::Float64 = NaN) = SingleObjective(f, sense, iv, bound)
 
-getValue(obj::SingleObjective) =  getValue(obj.f)
+getvalue(obj::SingleObjective) =  getvalue(obj.f)
 
 function senseValue(obj::SingleObjective)
     # To get Φ and Fstar with right signs
     if obj.sense == :Max
-        return -getValue(obj.f)
+        return -getvalue(obj.f)
     else
-        return getValue(obj.f)
+        return getvalue(obj.f)
     end
 end
 
-getValue(arr::Array{SingleObjective}) = map(getValue, arr)
+getvalue(arr::Array{SingleObjective}) = map(getvalue, arr)
 senseValue(arr::Array{SingleObjective}) = map(senseValue, arr)
 
 # stores extension data inside JuMP Model
@@ -101,19 +101,19 @@ function _solve_ws(m::Model)
     for (i, objective) in enumerate(objectives)
         @NLobjective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
-            setValue(m.varDict[key], value)
+            setvalue(m.varDict[key], value)
         end
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
 
-        push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
-        push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+        push!(multim.utopiavarvalues, Dict([key => getvalue(val) for (key, val) in m.varDict]))
+        push!(multim.paretovarvalues, Dict([key => getvalue(val) for (key, val) in m.varDict]))
 
         Phi[:,i] = senseValue(objectives)
 
-        push!(multim.paretofront, getValue(objectives))
+        push!(multim.paretofront, getvalue(objectives))
     end
     Fmax = maximum(Phi,2)
     Fmin = minimum(Phi,2) # == diag(Phi)?
@@ -136,15 +136,15 @@ function _solve_ws(m::Model)
             continue
         end
 
-        setValue(β, betaval)
+        setvalue(β, betaval)
 
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
 
-        push!(multim.paretofront, getValue(objectives))
-        push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+        push!(multim.paretofront, getvalue(objectives))
+        push!(multim.paretovarvalues, Dict([key => getvalue(val) for (key, val) in m.varDict]))
     end
 
     return :Optimal
@@ -164,19 +164,19 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
     for (i, objective) in enumerate(objectives)
         @NLobjective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
-            setValue(m.varDict[key], value)
+            setvalue(m.varDict[key], value)
         end
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
 
-        push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
-        push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+        push!(multim.utopiavarvalues, Dict([key => getvalue(val) for (key, val) in m.varDict]))
+        push!(multim.paretovarvalues, Dict([key => getvalue(val) for (key, val) in m.varDict]))
 
         Phi[:,i] = senseValue(objectives)
 
-        push!(multim.paretofront, getValue(objectives))
+        push!(multim.paretofront, getvalue(objectives))
     end
     Fstar = diag(Phi)
 
@@ -223,14 +223,14 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
             # they are already performed
             continue
         end
-        setValue(β, betaval)
+        setvalue(β, betaval)
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
 
-        push!(multim.paretofront, getValue(objectives))
-        push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+        push!(multim.paretofront, getvalue(objectives))
+        push!(multim.paretovarvalues, Dict([key => getvalue(val) for (key, val) in m.varDict]))
     end
 
     return :Optimal
@@ -255,19 +255,19 @@ function _solve_eps(m::Model)
     for (i, objective) in enumerate(objectives)
         @NLobjective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
-            setValue(m.varDict[key], value)
+            setvalue(m.varDict[key], value)
         end
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
 
-        push!(multim.utopiavarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
-        push!(multim.paretovarvalues, Dict([key => getValue(val) for (key, val) in m.varDict]))
+        push!(multim.utopiavarvalues, Dict([key => getvalue(val) for (key, val) in m.varDict]))
+        push!(multim.paretovarvalues, Dict([key => getvalue(val) for (key, val) in m.varDict]))
 
         Phi[:,i] = senseValue(objectives)
 
-        push!(multim.paretofront, getValue(objectives))
+        push!(multim.paretofront, getvalue(objectives))
     end
     Fmax = maximum(Phi,2)
     Fmin = minimum(Phi,2) # == diag(Phi)?
@@ -292,16 +292,16 @@ function _solve_eps(m::Model)
             continue
         end
 
-        setValue(β, betaval)
+        setvalue(β, betaval)
 
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
 
-        push!(multim.paretofront, getValue(objectives))
+        push!(multim.paretofront, getvalue(objectives))
         push!(multim.paretovarvalues,
-              Dict([key => getValue(val) for (key, val) in m.varDict]))
+              Dict([key => getvalue(val) for (key, val) in m.varDict]))
     end
 
     return :Optimal

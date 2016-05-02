@@ -46,9 +46,9 @@ solve(m, method = :NBI)
 
 function plot_comparison()
     function pltfun(x1)
-        setValue(x[1], x1)
-        setValue(x[2:n], zeros(n-1))
-        getValue(f2)
+        setvalue(x[1], x1)
+        setvalue(x[2:n], zeros(n-1))
+        getvalue(f2)
     end
 
     numpoints = length(multim.paretofront)
