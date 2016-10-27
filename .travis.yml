@@ -7,6 +7,9 @@ julia:
   - 0.5
 notifications:
   email: false
+addons:
+  apt_packages:
+    - gfortran
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
     #- julia -e 'Pkg.add("Ipopt")'
