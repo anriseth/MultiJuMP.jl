@@ -1,4 +1,5 @@
-julia 0.4
-JuMP 0.12
+julia 0.5
+JuMP 0.14
 Ipopt
+Combinatorics
 
