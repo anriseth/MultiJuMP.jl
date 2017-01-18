@@ -59,16 +59,3 @@ nbi = plot(x=f1arr, y=f2arr, Geom.point,
 ![Pareto front example](./img/pareto_example.svg) -->
 ![Pareto front example](https://cdn.rawgit.com/anriseth/MultiJuMP.jl/master/img/pareto_example.svg)
 
-
-##TODO:
-- Tell travis to install Ipopt
-- Create 3 objective test for :EPS, :NBI and :WS
-- Add bounds on the MultiObjective type (So we can ask to only search over subset of pareto front )
-    * __This seems to be causing problems for NBI__
-- Add objective `t` before the individual optimisations?
-    * Then we can warm-start the NBI subproblems after the individual runs?
-    * It seemed to cause an issue in revenue-profit optimisation,
-    where including `t` caused the algorithm to find a worse, local optimum
-- For 3 objectives or more: Make it possible to have different spacing in the
-  components of $\beta$
-- Implement Eichfelder algorithm?
