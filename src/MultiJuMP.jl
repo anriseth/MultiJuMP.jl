@@ -200,7 +200,7 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
     if inequalityconstraint == false
         # Standard NBI
         for (i, objective) in enumerate(objectives)
-            @NLconstraint(m, nbiconstr,
+            @NLconstraint(m,
                           sum(Phi[i,j]*(β[j]-t)
                               for j = 1:numobj if j != i) ==
                           sensemap[objective.sense]*objective.f-Fstar[i])
@@ -208,7 +208,7 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
     else
         # Pascoletti-Serafini extension
         for (i, objective) in enumerate(objectives)
-            @NLconstraint(m, nbiconstr,
+            @NLconstraint(m,
                           sum(Phi[i,j]*(β[j]-t)
                               for j=1:numobj if j != i) >=
                           sensemap[objective.sense]*objective.f-Fstar[i])
