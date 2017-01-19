@@ -125,8 +125,8 @@ function _solve_ws(m::Model)
     @NLparameter(m, β[i=1:numobj] == beta[i])
 
     @NLobjective(m, :Min,
-                 sum{β[i]*(sensemap[objectives[i].sense]*objectives[i].f -
-                           Fmin[i])/(Fmax[i]-Fmin[i]), i=1:numobj})
+                 sum(β[i]*(sensemap[objectives[i].sense]*objectives[i].f -
+                           Fmin[i])/(Fmax[i]-Fmin[i]) for i=1:numobj))
 
     betatree = betas(numobj, multim.pointsperdim-1)
 
@@ -201,16 +201,16 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
         # Standard NBI
         for (i, objective) in enumerate(objectives)
             @NLconstraint(m, nbiconstr,
-                          sum{Phi[i,j]*(β[j]-t),
-                              j=1:numobj; j != i} ==
+                          sum(Phi[i,j]*(β[j]-t)
+                              for j = 1:numobj if j != i) ==
                           sensemap[objective.sense]*objective.f-Fstar[i])
         end
     else
         # Pascoletti-Serafini extension
         for (i, objective) in enumerate(objectives)
             @NLconstraint(m, nbiconstr,
-                          sum{Phi[i,j]*(β[j]-t),
-                              j=1:numobj; j != i} >=
+                          sum(Phi[i,j]*(β[j]-t)
+                              for j=1:numobj if j != i) >=
                           sensemap[objective.sense]*objective.f-Fstar[i])
         end
     end
