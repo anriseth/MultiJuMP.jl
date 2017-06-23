@@ -102,15 +102,15 @@ function _solve_ws(m::Model)
     for (i, objective) in enumerate(objectives)
         @NLobjective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
-            setvalue(m.varDict[key], value)
+            setvalue(m.objDict[key], value)
         end
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
 
-        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
+        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
+        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
 
         Phi[:,i] = senseValue(objectives)
 
@@ -118,6 +118,9 @@ function _solve_ws(m::Model)
     end
     Fmax = maximum(Phi,2)
     Fmin = minimum(Phi,2) # == diag(Phi)?
+    if Fmax == Fmin
+        error("The Nadir and Utopia points are equal") # I think that's what this means?
+    end
 
     multim.Phi = Phi
 
@@ -145,7 +148,7 @@ function _solve_ws(m::Model)
         end
 
         push!(multim.paretofront, getvalue(objectives))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
+        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
     end
 
     return :Optimal
@@ -165,15 +168,15 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
     for (i, objective) in enumerate(objectives)
         @NLobjective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
-            setvalue(m.varDict[key], value)
+            setvalue(m.objDict[key], value)
         end
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
 
-        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
+        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
+        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
 
         Phi[:,i] = senseValue(objectives)
 
@@ -231,7 +234,7 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
         end
 
         push!(multim.paretofront, getvalue(objectives))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
+        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
     end
 
     return :Optimal
@@ -256,15 +259,15 @@ function _solve_eps(m::Model)
     for (i, objective) in enumerate(objectives)
         @NLobjective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
-            setvalue(m.varDict[key], value)
+            setvalue(m.objDict[key], value)
         end
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
 
-        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
+        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
+        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
 
         Phi[:,i] = senseValue(objectives)
 
@@ -302,7 +305,7 @@ function _solve_eps(m::Model)
 
         push!(multim.paretofront, getvalue(objectives))
         push!(multim.paretovarvalues,
-              Dict(key => getvalue(val) for (key, val) in m.varDict))
+              Dict(key => getvalue(val) for (key, val) in m.objDict))
     end
 
     return :Optimal
