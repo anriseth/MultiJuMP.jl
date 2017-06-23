@@ -109,8 +109,8 @@ function _solve_ws(m::Model)
             return status
         end
 
-        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
+        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict if eltype(val) == JuMP.Variable))
+        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict  if eltype(val) == JuMP.Variable))
 
         Phi[:,i] = senseValue(objectives)
 
@@ -148,7 +148,7 @@ function _solve_ws(m::Model)
         end
 
         push!(multim.paretofront, getvalue(objectives))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
+        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict if eltype(val) == JuMP.Variable))
     end
 
     return :Optimal
@@ -175,8 +175,8 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
             return status
         end
 
-        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
+        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict if eltype(val) == JuMP.Variable))
+        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict if eltype(val) == JuMP.Variable))
 
         Phi[:,i] = senseValue(objectives)
 
@@ -234,7 +234,7 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
         end
 
         push!(multim.paretofront, getvalue(objectives))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
+        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict if eltype(val) == JuMP.Variable))
     end
 
     return :Optimal
@@ -266,8 +266,8 @@ function _solve_eps(m::Model)
             return status
         end
 
-        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict))
+        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict if eltype(val) == JuMP.Variable))
+        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict if eltype(val) == JuMP.Variable))
 
         Phi[:,i] = senseValue(objectives)
 
@@ -304,8 +304,7 @@ function _solve_eps(m::Model)
         end
 
         push!(multim.paretofront, getvalue(objectives))
-        push!(multim.paretovarvalues,
-              Dict(key => getvalue(val) for (key, val) in m.objDict))
+        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.objDict if eltype(val) == JuMP.Variable))
     end
 
     return :Optimal
