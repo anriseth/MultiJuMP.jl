@@ -65,13 +65,13 @@ end
 function MultiModel(;solver=Ipopt.IpoptSolver())
     m = Model(solver=solver)
     m.solvehook = solvehook
-    m.ext[:Multi] = MultiData(Array(SingleObjective,0),
+    m.ext[:Multi] = MultiData(Array{SingleObjective}(0),
                               SingleObjective(), SingleObjective(),
                               Any, Any,
                               10,
                               Dict[], Float64[],
                               Float64[], Dict[], Any[],
-                              Array(Float64,2,2), Array(Float64,2))
+                              Array{Float64}(2,2), Array{Float64}(2))
     return m
 end
 
