@@ -5,6 +5,7 @@ module MultiJuMP
 using JuMP
 import Ipopt
 import JuMP: JuMPTypes, getvalue
+import MathProgBase
 import Plots: scatter, scatter3d
 import Base.warn
 import Combinatorics.combinations
@@ -39,7 +40,7 @@ getvalue(arr::Array{SingleObjective}) = map(getvalue, arr)
 senseValue(arr::Array{SingleObjective}) = map(senseValue, arr)
 
 # stores extension data inside JuMP Model
-type MultiData
+type MultiData{Tx,To}
     objectives::Array{SingleObjective}
     f1::SingleObjective
     f2::SingleObjective
@@ -51,10 +52,10 @@ type MultiData
     pointsperdim::Int
     #
     # stored values
-    utopiavarvalues::Array{Dict, 1}
-    utopia::Array{Float64,1}
-    nadir::Array{Float64,1}
-    paretovarvalues::Array{Dict, 1}
+    utopiavarvalues::AbstractArray{Tx}
+    utopia::AbstractArray{To}
+    nadir::AbstractArray{To}
+    paretovarvalues::AbstractArray{Tx}
     paretofront
 
     Phi::Array{Float64,2}
@@ -65,12 +66,12 @@ end
 function MultiModel(;solver=Ipopt.IpoptSolver())
     m = Model(solver=solver)
     m.solvehook = solvehook
-    m.ext[:Multi] = MultiData(Array(SingleObjective,0),
+    m.ext[:Multi] = MultiData(Array{SingleObjective}(0),
                               SingleObjective(), SingleObjective(),
                               Any, Any,
                               10,
-                              Dict[], Float64[],
-                              Float64[], Dict[], Any[],
+                              Array{Float64}[], Float64[],
+                              Float64[], Array{Float64}[], Any[],
                               Array(Float64,2,2), Array(Float64,2))
     return m
 end
@@ -95,6 +96,8 @@ function _solve_ws(m::Model)
     objectives = multim.objectives
     const sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
+    vararr = [JuMP.Variable(m,i) for i in 1:MathProgBase.numvar(m)]
+
     numobj = length(objectives)
     Phi = zeros(numobj,numobj)
 
@@ -102,15 +105,16 @@ function _solve_ws(m::Model)
     for (i, objective) in enumerate(objectives)
         @NLobjective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
-            setvalue(m.varDict[key], value)
+            # TODO: What is the correct way to set these values?
+            setvalue(m.objDict[key], value)
         end
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
 
-        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
+        push!(multim.utopiavarvalues, [getvalue(var) for var in vararr])
+        push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
 
         Phi[:,i] = senseValue(objectives)
 
@@ -118,6 +122,9 @@ function _solve_ws(m::Model)
     end
     Fmax = maximum(Phi,2)
     Fmin = minimum(Phi,2) # == diag(Phi)?
+    if Fmax == Fmin
+        error("The Nadir and Utopia points are equal") # I think that's what this means?
+    end
 
     multim.Phi = Phi
 
@@ -145,7 +152,7 @@ function _solve_ws(m::Model)
         end
 
         push!(multim.paretofront, getvalue(objectives))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
+        push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
     end
 
     return :Optimal
@@ -156,6 +163,8 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
     objectives = multim.objectives
     const sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
+    vararr = [JuMP.Variable(m,i) for i in 1:MathProgBase.numvar(m)]
+
     # Stage 1: Calculate Φ
     numobj = length(objectives)
     Fstar = zeros(numobj)
@@ -165,15 +174,16 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
     for (i, objective) in enumerate(objectives)
         @NLobjective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
-            setvalue(m.varDict[key], value)
+            # TODO: What is the correct way to do this? (anonymous variables)
+            setvalue(m.objDict[key], value)
         end
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
 
-        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
+        push!(multim.utopiavarvalues, [getvalue(var) for var in vararr])
+        push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
 
         Phi[:,i] = senseValue(objectives)
 
@@ -231,7 +241,7 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
         end
 
         push!(multim.paretofront, getvalue(objectives))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
+        push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
     end
 
     return :Optimal
@@ -242,6 +252,8 @@ function _solve_eps(m::Model)
     objectives = multim.objectives
     const sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
+    vararr = [JuMP.Variable(m,i) for i in 1:MathProgBase.numvar(m)]
+
     numobj = length(objectives)
     Phi = zeros(numobj,numobj)
 
@@ -249,22 +261,23 @@ function _solve_eps(m::Model)
         # TODO:
         # The logic  here becomes difficult, as the feasible region will require
         # a dependency between the constraints
-        Base.error("Not thought through for > 2 objectives yet")
+        Base.error(":EPS is thought through for > 2 objectives yet")
     end
 
     # Individual minimisations
     for (i, objective) in enumerate(objectives)
         @NLobjective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
-            setvalue(m.varDict[key], value)
+            # TODO: What is the correct way to do this? (anonymous variables)
+            setvalue(m.objDict[key], value)
         end
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
             return status
         end
 
-        push!(multim.utopiavarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
-        push!(multim.paretovarvalues, Dict(key => getvalue(val) for (key, val) in m.varDict))
+        push!(multim.utopiavarvalues, [getvalue(var) for var in vararr])
+        push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
 
         Phi[:,i] = senseValue(objectives)
 
@@ -301,8 +314,7 @@ function _solve_eps(m::Model)
         end
 
         push!(multim.paretofront, getvalue(objectives))
-        push!(multim.paretovarvalues,
-              Dict(key => getvalue(val) for (key, val) in m.varDict))
+        push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
     end
 
     return :Optimal
