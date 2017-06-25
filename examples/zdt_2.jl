@@ -30,4 +30,4 @@ multim.objectives = [obj1, obj2]
 multim.pointsperdim = 30
 solve(m, method = :NBI)
 
-plotfront(multim)
+plot(multim)
