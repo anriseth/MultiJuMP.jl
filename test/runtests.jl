@@ -1,6 +1,5 @@
 using MultiJuMP, JuMP
 using Base.Test
-using FactCheck
 #using AmplNLWriter
 using Ipopt
 
@@ -21,7 +20,7 @@ using Ipopt
 # end
 
 
-facts("NBI optimisation") do
+@testset "NBI optimisation" do
     m = MultiModel(solver = IpoptSolver(print_level=0))
     @variable(m, x[i=1:5])
     @NLexpressions m begin
@@ -49,11 +48,11 @@ facts("NBI optimisation") do
     f1true = [0.555081, 10.0, 7.16982, 4.48665, 2.08008]
     f2true = [2.13057, -4.01115, -2.78066, -1.45458, 0.0513689]
 
-    @fact f1arr --> roughly(f1true, 1e-5)
-    @fact f2arr --> roughly(f2true, 1e-5)
+    @test f1arr ≈ f1true
+    @test f2arr ≈ f2true
 end
 
-facts("WS optimisation") do
+@testset "WS optimisation" do
     m = MultiModel(solver = IpoptSolver(print_level=0))
     @variable(m, x[i=1:5])
     @NLexpressions m begin
@@ -81,11 +80,11 @@ facts("WS optimisation") do
     f1true = [0.555081, 10.0, 10.0, 2.88267, 0.726877]
     f2true = [2.13057, -4.01115, -4.01115, -0.510963, 1.48613]
 
-    @fact f1arr --> roughly(f1true, 1e-5)
-    @fact f2arr --> roughly(f2true, 1e-5)
+    @test f1arr ≈ f1true
+    @test f2arr ≈ f2true
 end
 
-facts("EPS optimisation") do
+@testset "EPS optimisation" do
     m = MultiModel(solver = IpoptSolver(print_level=0))
     @variable(m, x[i=1:5])
         @NLexpressions m begin
@@ -113,21 +112,21 @@ facts("EPS optimisation") do
     f1true = [0.555081, 10.0, 7.63877, 5.27754, 2.91631]
     f2true = [2.13057, -4.01115, -2.99356, -1.86918, -0.532781]
 
-    @fact f1arr --> roughly(f1true, 1e-5)
-    @fact f2arr --> roughly(f2true, 1e-5)
+    @test f1arr ≈ f1true
+    @test f2arr ≈ f2true
 end
 
 
 
-
-facts("TODO: Initial value test") do
+@testset "TODO: Initial value test" do
     # TODO: Let f1 have two minima and
     # check that initial value gives correct minima
-    @fact 1 --> 1
+    # TODO: Add anonymous variables
+    @test 1 == 1
 end
 
-facts("TODO: NBI Inequality test") do
+@testset "TODO: NBI Inequality test" do
     # TODO: Test that the inequality-extension of NBI works
     # We can use the nc_paper_2.jl example
-    @fact 1 --> 1
+    @test 1 == 1
 end
