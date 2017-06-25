@@ -27,11 +27,11 @@ using Ipopt
 
 m = MultiModel(solver = IpoptSolver())
 @variable(m, x[i=1:5])
-@NLexpression(m, f1, sum{x[i]^2, i=1:5})
+@NLexpression(m, f1, sum(x[i]^2 for i=1:5))
 @NLexpression(m, f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3)
 @NLconstraint(m, x[1]+2x[2]-x[3]-0.5x[4]+x[5]==2)
 @NLconstraint(m, 4x[1]-2x[2]+0.8x[3]+0.6x[4]+0.5x[5]^2 == 0)
-@NLconstraint(m, sum{x[i]^2, i=1:5} <= 10)
+@NLconstraint(m, sum(x[i]^2 for i=1:5) <= 10)
 
 iv1 = [0.3, 0.5, -0.26, -0.13, 0.28] # Initial guess
 obj1 = SingleObjective(f1, sense = :Min,
@@ -44,18 +44,11 @@ md.pointsperdim = 20
 solve(m, method = :NBI) # method = :WS or method = :EPS
 ```
 
-Plot with Plots.jl using ```plotfront(md)```, or more generally:
+Plotting with `Plots.jl` is supported via recipes:
 ```julia
-using Gadfly
-f1arr = convert(Array{Float64},
-                [val[1] for val in md.paretofront])
-f2arr = convert(Array{Float64},
-                [val[2] for val in md.paretofront])
-
-nbi = plot(x=f1arr, y=f2arr, Geom.point,
-           Guide.xlabel("f1"), Guide.ylabel("f2"))
+using Plots
+pltnbi = plot(md)
 ```
 <!-- Github bug
 ![Pareto front example](./img/pareto_example.svg) -->
 ![Pareto front example](https://cdn.rawgit.com/anriseth/MultiJuMP.jl/master/img/pareto_example.svg)
-
