@@ -40,7 +40,7 @@ getvalue(arr::Array{SingleObjective}) = map(getvalue, arr)
 senseValue(arr::Array{SingleObjective}) = map(senseValue, arr)
 
 # stores extension data inside JuMP Model
-type MultiData
+type MultiData{Tx,To}
     objectives::Array{SingleObjective}
     f1::SingleObjective
     f2::SingleObjective
@@ -52,10 +52,10 @@ type MultiData
     pointsperdim::Int
     #
     # stored values
-    utopiavarvalues::Array{Dict, 1}
-    utopia::Array{Float64,1}
-    nadir::Array{Float64,1}
-    paretovarvalues::Array{Dict, 1}
+    utopiavarvalues::AbstractArray{Tx}
+    utopia::AbstractArray{To}
+    nadir::AbstractArray{To}
+    paretovarvalues::AbstractArray{Tx}
     paretofront
 
     Phi::Array{Float64,2}
@@ -70,8 +70,8 @@ function MultiModel(;solver=Ipopt.IpoptSolver())
                               SingleObjective(), SingleObjective(),
                               Any, Any,
                               10,
-                              Dict[], Float64[],
-                              Float64[], Dict[], Any[],
+                              Array{Float64}[], Float64[],
+                              Float64[], Array{Float64}[], Any[],
                               Array(Float64,2,2), Array(Float64,2))
     return m
 end
@@ -113,8 +113,8 @@ function _solve_ws(m::Model)
             return status
         end
 
-        push!(multim.utopiavarvalues, vararr)
-        push!(multim.paretovarvalues, vararr)
+        push!(multim.utopiavarvalues, [getvalue(var) for var in vararr])
+        push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
 
         Phi[:,i] = senseValue(objectives)
 
@@ -152,7 +152,7 @@ function _solve_ws(m::Model)
         end
 
         push!(multim.paretofront, getvalue(objectives))
-        push!(multim.paretovarvalues, vararr)
+        push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
     end
 
     return :Optimal
@@ -182,8 +182,8 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
             return status
         end
 
-        push!(multim.utopiavarvalues, vararr)
-        push!(multim.paretovarvalues, vararr)
+        push!(multim.utopiavarvalues, [getvalue(var) for var in vararr])
+        push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
 
         Phi[:,i] = senseValue(objectives)
 
@@ -241,7 +241,7 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
         end
 
         push!(multim.paretofront, getvalue(objectives))
-        push!(multim.paretovarvalues, vararr)
+        push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
     end
 
     return :Optimal
@@ -276,8 +276,8 @@ function _solve_eps(m::Model)
             return status
         end
 
-        push!(multim.utopiavarvalues, vararr)
-        push!(multim.paretovarvalues, vararr)
+        push!(multim.utopiavarvalues, [getvalue(var) for var in vararr])
+        push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
 
         Phi[:,i] = senseValue(objectives)
 
@@ -314,7 +314,7 @@ function _solve_eps(m::Model)
         end
 
         push!(multim.paretofront, getvalue(objectives))
-        push!(multim.paretovarvalues, vararr)
+        push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
     end
 
     return :Optimal
