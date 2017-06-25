@@ -13,7 +13,6 @@ Structural and Multidisciplinary Optimization, 31(2):105–116, 2006.
 
 using MultiJuMP, JuMP
 using Ipopt
-using JLD
 
 m = MultiModel(solver = IpoptSolver())
 
@@ -39,24 +38,6 @@ md.objectives = [obj1, obj2, obj3]
 md.pointsperdim = 10
 solve(m, method = :NBI)
 
-numpoints = length(md.paretofront)
-f1arr = convert(Array{Float64},
-                [val[1] for val in md.paretofront])
-f2arr = convert(Array{Float64},
-                [val[2] for val in md.paretofront])
-f3arr = convert(Array{Float64},
-                [val[3] for val in md.paretofront])
-
-@save("paretovals_kim_3d_convex.jld", f1arr, f2arr, f3arr)
-
-# using PyPlot
-# fig = figure()
-# scatter3D(f1arr, f2arr, f3arr)
-# show()
-# xlabel("f1")
-# ylabel("f2")
-# zlabel("f3")
-
 using Plots
-backend(:pyplot)
-plotfront(md)
+pyplot()
+plot(md)

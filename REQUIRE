@@ -2,4 +2,5 @@ julia 0.6
 JuMP 0.17.1
 Ipopt
 Combinatorics
-Plots
+RecipesBase
+LaTeXStrings

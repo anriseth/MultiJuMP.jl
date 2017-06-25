@@ -41,28 +41,17 @@ multim.objectives = [obj1, obj2]
 multim.pointsperdim = 60
 # NB: solve fails with an infeasibility error 65% through the algorithm,
 # You can still plot the results by pasting in the plot_comparison() function below
-solve(m, method = :NBI)
+solve(m, method = :NBI, inequalityconstraint = true)
 
-
-function plot_comparison()
-    function pltfun(x1)
-        setvalue(x[1], x1)
-        setvalue(x[2:n], zeros(n-1))
-        getvalue(f2)
-    end
-
-    numpoints = length(multim.paretofront)
-    f1arr = convert(Array{Float64},
-                    [val[1] for val in multim.paretofront])
-    f2arr = convert(Array{Float64},
-                    [val[2] for val in multim.paretofront])
-
-    discl = layer(x=f1arr, y=f2arr, Geom.point)
-    ctsl = layer(x->pltfun(x), 0, 1,
-                 Theme(default_color=colorant"orange"))
-    plot(discl, ctsl,
-         Guide.xlabel("f<sub>1</sub>"), Guide.ylabel("f<sub>2</sub>"),
-         Guide.title("Pareto front with $numpoints points"))
+function pltfun(x1)
+    setvalue(x[1], x1)
+    setvalue(x[2:n], zeros(n-1))
+    getvalue(f2)
 end
 
-frontplot = plot_comparison()
+using Plots
+plt = plot(multim, label="NBI points",
+           legend = :bottomleft)
+xvals = linspace(0,1,200)
+plot!(plt, xvals, pltfun, markercolor="orange",
+      label="Image boundary")
