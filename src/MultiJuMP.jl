@@ -6,11 +6,11 @@ using JuMP
 import Ipopt
 import JuMP: JuMPTypes, getvalue
 import MathProgBase
-import Plots: scatter, scatter3d
+using RecipesBase, LaTeXStrings
 import Base.warn
 import Combinatorics.combinations
 
-export MultiModel, SingleObjective, getMultiData, plotfront
+export MultiModel, SingleObjective, getMultiData
 
 type SingleObjective
     f # JuMP-expression TODO: use JuMPTypes or something?
@@ -41,7 +41,7 @@ senseValue(arr::Array{SingleObjective}) = map(senseValue, arr)
 
 # stores extension data inside JuMP Model
 type MultiData{Tx,To}
-    objectives::Array{SingleObjective}
+    objectives::Vector{SingleObjective}
     f1::SingleObjective
     f2::SingleObjective
     normalf1
@@ -52,14 +52,14 @@ type MultiData{Tx,To}
     pointsperdim::Int
     #
     # stored values
-    utopiavarvalues::AbstractArray{Tx}
-    utopia::AbstractArray{To}
-    nadir::AbstractArray{To}
-    paretovarvalues::AbstractArray{Tx}
+    utopiavarvalues::Vector{Vector{Tx}}
+    utopia::Vector{To}
+    nadir::Vector{Tx}
+    paretovarvalues::Vector{Vector{To}}
     paretofront
 
-    Phi::Array{Float64,2}
-    Fstar::Array{Float64,1}
+    Phi::Array{To,2}
+    Fstar::Vector{To}
 end
 
 
@@ -70,9 +70,9 @@ function MultiModel(;solver=Ipopt.IpoptSolver())
                               SingleObjective(), SingleObjective(),
                               Any, Any,
                               10,
-                              Array{Float64}[], Float64[],
-                              Float64[], Array{Float64}[], Any[],
-                              Array(Float64,2,2), Array(Float64,2))
+                              Vector{Float64}[], Float64[],
+                              Float64[], Vector{Float64}[], Any[],
+                              Array{Float64}(2,2), Array{Float64}(2))
     return m
 end
 
@@ -338,33 +338,36 @@ function solvehook(m::Model; method::Symbol = :NBI,
     return status
 end
 
-function plotfront(md::MultiData)
+@recipe function f{Tx,To}(md::MultiData{Tx,To})
+    seriestype --> :scatter
+    xlabel --> L"$f_1$"
+    ylabel --> L"$f_2$"
+    zlabel --> L"$f_3$"
+    label --> ""
     numobjectives = length(md.objectives)
-    if numobjectives > 3
+    if numobjectives > 3 || numobjectives < 2
         Base.error("Only plotting 2d and 3d fronts")
     end
 
-    numpoints = length(md.paretofront)
     f1arr = convert(Array{Float64},
                     [val[1] for val in md.paretofront])
     f2arr = convert(Array{Float64},
                     [val[2] for val in md.paretofront])
+
+    title --> "Pareto front with $(length(f1arr)) points"
+
     if numobjectives == 2
-        retplt = scatter(x=f1arr, y=f2arr,
-                         xlabel = "f_1", ylabel = "f_2",
-                         legend = false,
-                         title = "Pareto front with $numpoints points")
+        xyz = (f1arr, f2arr)
     else
         f3arr = convert(Array{Float64},
                         [val[3] for val in md.paretofront])
-        retplt = scatter3d(x=f1arr, y=f2arr, z=f3arr, legend = false,
-                           xlabel = "f_1", ylabel = "f_2",
-                           title = "Pareto front with $numpoints points")
-
+        xyz = (f1arr, f2arr, f3arr)
     end
-    return retplt
+    (xyz...)
 end
 
-plotfront(model::Model) = plotfront(getMultiData(model))
+@recipe function f(m::JuMP.Model)
+    plot(getMultiData(m))
+end
 
 end
