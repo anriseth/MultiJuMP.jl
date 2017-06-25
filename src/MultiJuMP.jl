@@ -66,7 +66,7 @@ end
 function MultiModel(;solver=Ipopt.IpoptSolver())
     m = Model(solver=solver)
     m.solvehook = solvehook
-    m.ext[:Multi] = MultiData(Array(SingleObjective,0),
+    m.ext[:Multi] = MultiData(Array{SingleObjective}(0),
                               SingleObjective(), SingleObjective(),
                               Any, Any,
                               10,
