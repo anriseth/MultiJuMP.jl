@@ -20,7 +20,7 @@ using Ipopt
 # end
 
 
-@testset "NBI optimisation" do
+@testset "NBI optimisation" begin
     m = MultiModel(solver = IpoptSolver(print_level=0))
     @variable(m, x[i=1:5])
     @NLexpressions m begin
@@ -48,11 +48,11 @@ using Ipopt
     f1true = [0.555081, 10.0, 7.16982, 4.48665, 2.08008]
     f2true = [2.13057, -4.01115, -2.78066, -1.45458, 0.0513689]
 
-    @test f1arr ≈ f1true
-    @test f2arr ≈ f2true
+    @test isapprox(f1arr, f1true, atol=1e-2)
+    @test isapprox(f2arr, f2true, atol=1e-2)
 end
 
-@testset "WS optimisation" do
+@testset "WS optimisation" begin
     m = MultiModel(solver = IpoptSolver(print_level=0))
     @variable(m, x[i=1:5])
     @NLexpressions m begin
@@ -80,11 +80,11 @@ end
     f1true = [0.555081, 10.0, 10.0, 2.88267, 0.726877]
     f2true = [2.13057, -4.01115, -4.01115, -0.510963, 1.48613]
 
-    @test f1arr ≈ f1true
-    @test f2arr ≈ f2true
+    @test isapprox(f1arr, f1true, atol=1e-2)
+    @test isapprox(f2arr, f2true, atol=1e-2)
 end
 
-@testset "EPS optimisation" do
+@testset "EPS optimisation" begin
     m = MultiModel(solver = IpoptSolver(print_level=0))
     @variable(m, x[i=1:5])
         @NLexpressions m begin
@@ -112,20 +112,20 @@ end
     f1true = [0.555081, 10.0, 7.63877, 5.27754, 2.91631]
     f2true = [2.13057, -4.01115, -2.99356, -1.86918, -0.532781]
 
-    @test f1arr ≈ f1true
-    @test f2arr ≈ f2true
+    @test isapprox(f1arr, f1true, atol=1e-2)
+    @test isapprox(f2arr, f2true, atol=1e-2)
 end
 
 
 
-@testset "TODO: Initial value test" do
+@testset "TODO: Initial value test" begin
     # TODO: Let f1 have two minima and
     # check that initial value gives correct minima
     # TODO: Add anonymous variables
     @test 1 == 1
 end
 
-@testset "TODO: NBI Inequality test" do
+@testset "TODO: NBI Inequality test" begin
     # TODO: Test that the inequality-extension of NBI works
     # We can use the nc_paper_2.jl example
     @test 1 == 1
