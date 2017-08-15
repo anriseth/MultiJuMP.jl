@@ -12,7 +12,7 @@ import Combinatorics.combinations
 
 export MultiModel, SingleObjective, getMultiData
 
-type SingleObjective
+mutable struct SingleObjective
     f # JuMP-expression TODO: use JuMPTypes or something?
     sense::Symbol
     initialvalue::Dict{Symbol,Any} # Variable => Initial value
@@ -40,7 +40,7 @@ getvalue(arr::Array{SingleObjective}) = map(getvalue, arr)
 senseValue(arr::Array{SingleObjective}) = map(senseValue, arr)
 
 # stores extension data inside JuMP Model
-type MultiData{Tx,To}
+mutable struct MultiData{Tx,To}
     objectives::Vector{SingleObjective}
     f1::SingleObjective
     f2::SingleObjective
