@@ -1,6 +1,7 @@
 # MultiJuMP
 
 [![Build Status](https://travis-ci.org/anriseth/MultiJuMP.jl.svg?branch=master)](https://travis-ci.org/anriseth/MultiJuMP.jl)
+[![DOI](https://zenodo.org/badge/41850916.svg)](https://zenodo.org/badge/latestdoi/41850916)
 
 MultiJuMP enables the user to easily run multiobjective optimisation problems
 and generate Pareto fronts. The code is built as an extension of
