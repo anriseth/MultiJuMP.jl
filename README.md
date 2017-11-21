@@ -15,7 +15,7 @@ We have implemented three ways to trace out the Pareto front:
 **Disclaimer**: MultiJuMP is *not* developed or maintained by the JuMP developers.
 
 ## Installation
-In Julia, call `Pkg.clone("https://github.com/anriseth/MultiJuMP.jl.git")` to install MultiJuMP.
+In Julia, call `Pkg.add("MultiJuMP")` to install MultiJuMP.
 
 ## Usage
 Have a look in the `examples/` directory for different use cases, including
