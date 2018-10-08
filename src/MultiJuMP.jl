@@ -9,7 +9,7 @@ import MathProgBase
 using RecipesBase, LaTeXStrings
 import Base.warn
 import Combinatorics.combinations
-
+using LinearAlgebra
 export MultiModel, SingleObjective, getMultiData
 
 mutable struct SingleObjective
@@ -66,13 +66,13 @@ end
 function MultiModel(;solver=Ipopt.IpoptSolver())
     m = Model(solver=solver)
     m.solvehook = solvehook
-    m.ext[:Multi] = MultiData(Array{SingleObjective}(0),
+    m.ext[:Multi] = MultiData(Array{SingleObjective}(undef, 0),
                               SingleObjective(), SingleObjective(),
                               Any, Any,
                               10,
                               Vector{Float64}[], Float64[],
                               Float64[], Vector{Float64}[], Any[],
-                              Array{Float64}(2,2), Array{Float64}(2))
+                              Array{Float64}(undef, 2,2), Array{Float64}(undef, 2))
     return m
 end
 
@@ -87,7 +87,7 @@ end
 function betas(levels,parts)
     # Sets up the tree of all possible
     # convex combinations of the objectives
-    map(x->([x;levels+parts].-[0;x]-1)/parts,
+    map(x->([x;levels+parts].-[0;x] .-1)/parts,
         combinations(1:(levels+parts-1),(levels-1)))
 end
 
@@ -138,7 +138,7 @@ function _solve_ws(m::Model)
     betatree = betas(numobj, multim.pointsperdim-1)
 
     for betaval in betatree
-        if countnz(betaval) == 1
+        if count(t -> t != 0, betaval) == 1
             # Skip individual optimisations as
             # they are already performed
             continue
@@ -229,7 +229,7 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
     betatree = betas(numobj, multim.pointsperdim-1)
 
     for betaval in betatree
-        if countnz(betaval) == 1
+        if count(t -> t != 0, betaval) == 1
             # Skip individual optimisations as
             # they are already performed
             continue
@@ -300,7 +300,7 @@ function _solve_eps(m::Model)
     betatree = betas(numobj, multim.pointsperdim-1)
 
     for betaval in betatree
-        if countnz(betaval) == 1
+        if count(t -> t != 0, betaval) == 1
             # Skip individual optimisations as
             # they are already performed
             continue
