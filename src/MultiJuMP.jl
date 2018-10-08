@@ -94,7 +94,7 @@ end
 function _solve_ws(m::Model)
     multim = getMultiData(m)
     objectives = multim.objectives
-    const sensemap = Dict(:Min => 1.0, :Max => -1.0)
+    sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
     vararr = [JuMP.Variable(m,i) for i in 1:MathProgBase.numvar(m)]
 
@@ -161,7 +161,7 @@ end
 function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
     multim = getMultiData(m)
     objectives = multim.objectives
-    const sensemap = Dict(:Min => 1.0, :Max => -1.0)
+    sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
     vararr = [JuMP.Variable(m,i) for i in 1:MathProgBase.numvar(m)]
 
@@ -250,7 +250,7 @@ end
 function _solve_eps(m::Model)
     multim = getMultiData(m)
     objectives = multim.objectives
-    const sensemap = Dict(:Min => 1.0, :Max => -1.0)
+    sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
     vararr = [JuMP.Variable(m,i) for i in 1:MathProgBase.numvar(m)]
 
@@ -363,7 +363,7 @@ end
                         [val[3] for val in md.paretofront])
         xyz = (f1arr, f2arr, f3arr)
     end
-    (xyz...)
+    (xyz...,)
 end
 
 @recipe function f(m::JuMP.Model)
