@@ -119,8 +119,8 @@ function _solve_ws(m::Model)
 
         push!(multim.paretofront, getvalue(objectives))
     end
-    Fmax = maximum(Phi,2)
-    Fmin = minimum(Phi,2) # == diag(Phi)?
+    Fmax = maximum(Phi, dims=2)
+    Fmin = minimum(Phi, dims=2) # == diag(Phi)?
     if Fmax == Fmin
         error("The Nadir and Utopia points are equal") # I think that's what this means?
     end
@@ -282,8 +282,8 @@ function _solve_eps(m::Model)
 
         push!(multim.paretofront, getvalue(objectives))
     end
-    Fmax = maximum(Phi,2)
-    Fmin = minimum(Phi,2) # == diag(Phi)?
+    Fmax = maximum(Phi, dims=2)
+    Fmin = minimum(Phi, dims=2) # == diag(Phi)?
 
     multim.Phi = Phi
 

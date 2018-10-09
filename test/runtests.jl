@@ -1,5 +1,5 @@
 using MultiJuMP, JuMP
-using Base.Test
+using Test
 #using AmplNLWriter
 using Ipopt
 
