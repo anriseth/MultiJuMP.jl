@@ -7,7 +7,6 @@ import Ipopt
 import JuMP: JuMPTypes, getvalue
 import MathProgBase
 using RecipesBase, LaTeXStrings
-import Base.warn
 import Combinatorics.combinations
 using LinearAlgebra
 export MultiModel, SingleObjective, getMultiData
