@@ -4,7 +4,7 @@ os:
   - linux
   - osx
 julia:
-  - 0.6
+  - 1.0
   - nightly
 matrix:
   allow_failures:
@@ -14,9 +14,9 @@ notifications:
 addons:
   apt_packages:
     - gfortran
-script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  #- julia -e 'Pkg.add("Ipopt")'
-  - julia -e 'Pkg.clone(pwd()); Pkg.test("MultiJuMP", coverage=true)'
+# script:
+#   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#   #- julia -e 'Pkg.add("Ipopt")'
+#   - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.test("MultiJuMP", coverage=true)'
 #after_success:
 #   - julia -e 'cd(Pkg.dir("MultiJuMP")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'

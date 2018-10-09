@@ -7,9 +7,8 @@ import Ipopt
 import JuMP: JuMPTypes, getvalue
 import MathProgBase
 using RecipesBase, LaTeXStrings
-import Base.warn
 import Combinatorics.combinations
-
+using LinearAlgebra
 export MultiModel, SingleObjective, getMultiData
 
 mutable struct SingleObjective
@@ -66,13 +65,13 @@ end
 function MultiModel(;solver=Ipopt.IpoptSolver())
     m = Model(solver=solver)
     m.solvehook = solvehook
-    m.ext[:Multi] = MultiData(Array{SingleObjective}(0),
+    m.ext[:Multi] = MultiData(Array{SingleObjective}(undef, 0),
                               SingleObjective(), SingleObjective(),
                               Any, Any,
                               10,
                               Vector{Float64}[], Float64[],
                               Float64[], Vector{Float64}[], Any[],
-                              Array{Float64}(2,2), Array{Float64}(2))
+                              Array{Float64}(undef, 2,2), Array{Float64}(undef, 2))
     return m
 end
 
@@ -87,14 +86,14 @@ end
 function betas(levels,parts)
     # Sets up the tree of all possible
     # convex combinations of the objectives
-    map(x->([x;levels+parts].-[0;x]-1)/parts,
+    map(x->([x;levels+parts].-[0;x] .-1)/parts,
         combinations(1:(levels+parts-1),(levels-1)))
 end
 
 function _solve_ws(m::Model)
     multim = getMultiData(m)
     objectives = multim.objectives
-    const sensemap = Dict(:Min => 1.0, :Max => -1.0)
+    sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
     vararr = [JuMP.Variable(m,i) for i in 1:MathProgBase.numvar(m)]
 
@@ -120,8 +119,8 @@ function _solve_ws(m::Model)
 
         push!(multim.paretofront, getvalue(objectives))
     end
-    Fmax = maximum(Phi,2)
-    Fmin = minimum(Phi,2) # == diag(Phi)?
+    Fmax = maximum(Phi, dims=2)
+    Fmin = minimum(Phi, dims=2) # == diag(Phi)?
     if Fmax == Fmin
         error("The Nadir and Utopia points are equal") # I think that's what this means?
     end
@@ -138,7 +137,7 @@ function _solve_ws(m::Model)
     betatree = betas(numobj, multim.pointsperdim-1)
 
     for betaval in betatree
-        if countnz(betaval) == 1
+        if count(t -> t != 0, betaval) == 1
             # Skip individual optimisations as
             # they are already performed
             continue
@@ -161,7 +160,7 @@ end
 function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
     multim = getMultiData(m)
     objectives = multim.objectives
-    const sensemap = Dict(:Min => 1.0, :Max => -1.0)
+    sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
     vararr = [JuMP.Variable(m,i) for i in 1:MathProgBase.numvar(m)]
 
@@ -229,7 +228,7 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
     betatree = betas(numobj, multim.pointsperdim-1)
 
     for betaval in betatree
-        if countnz(betaval) == 1
+        if count(t -> t != 0, betaval) == 1
             # Skip individual optimisations as
             # they are already performed
             continue
@@ -250,7 +249,7 @@ end
 function _solve_eps(m::Model)
     multim = getMultiData(m)
     objectives = multim.objectives
-    const sensemap = Dict(:Min => 1.0, :Max => -1.0)
+    sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
     vararr = [JuMP.Variable(m,i) for i in 1:MathProgBase.numvar(m)]
 
@@ -283,8 +282,8 @@ function _solve_eps(m::Model)
 
         push!(multim.paretofront, getvalue(objectives))
     end
-    Fmax = maximum(Phi,2)
-    Fmin = minimum(Phi,2) # == diag(Phi)?
+    Fmax = maximum(Phi, dims=2)
+    Fmin = minimum(Phi, dims=2) # == diag(Phi)?
 
     multim.Phi = Phi
 
@@ -300,7 +299,7 @@ function _solve_eps(m::Model)
     betatree = betas(numobj, multim.pointsperdim-1)
 
     for betaval in betatree
-        if countnz(betaval) == 1
+        if count(t -> t != 0, betaval) == 1
             # Skip individual optimisations as
             # they are already performed
             continue
@@ -363,7 +362,7 @@ end
                         [val[3] for val in md.paretofront])
         xyz = (f1arr, f2arr, f3arr)
     end
-    (xyz...)
+    (xyz...,)
 end
 
 @recipe function f(m::JuMP.Model)
