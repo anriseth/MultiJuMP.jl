@@ -12,7 +12,8 @@ We have implemented three ways to trace out the Pareto front:
 - Constraint methods (`solve(m, method = :EPS)`)
     * This method only works for biobjective optimisation as of now
 
-**Disclaimer**: MultiJuMP is *not* developed or maintained by the JuMP developers.
+**Disclaimer 1**: MultiJuMP is *not* developed or maintained by the JuMP developers.  
+**Disclaimer 2**: MultiJuMP currently supports non-linear objectives only.  
 
 ## Installation
 In Julia, call `Pkg.add("MultiJuMP")` to install MultiJuMP.
