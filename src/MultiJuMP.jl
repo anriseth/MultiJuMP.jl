@@ -3,7 +3,6 @@
 module MultiJuMP
 
 using JuMP
-import Ipopt
 import JuMP: JuMPTypes, getvalue
 import MathProgBase
 using RecipesBase, LaTeXStrings
@@ -38,7 +37,10 @@ end
 getvalue(arr::Array{SingleObjective}) = map(getvalue, arr)
 senseValue(arr::Array{SingleObjective}) = map(senseValue, arr)
 
-# stores extension data inside JuMP Model
+"""
+Stores extension data for multi-objective
+optimization inside JuMP Model
+"""
 mutable struct MultiData{Tx,To}
     objectives::Vector{SingleObjective}
     f1::SingleObjective
@@ -46,6 +48,7 @@ mutable struct MultiData{Tx,To}
     normalf1
     normalf2
 
+    linear::Bool
     # Number of points in each direction
     # of Pareto submanifold
     pointsperdim::Int
@@ -62,12 +65,13 @@ mutable struct MultiData{Tx,To}
 end
 
 
-function MultiModel(;solver=Ipopt.IpoptSolver())
+function MultiModel(;solver=nothing, linear = false)
     m = Model(solver=solver)
     m.solvehook = solvehook
+
     m.ext[:Multi] = MultiData(Array{SingleObjective}(undef, 0),
                               SingleObjective(), SingleObjective(),
-                              Any, Any,
+                              Any, Any, linear,
                               10,
                               Vector{Float64}[], Float64[],
                               Float64[], Vector{Float64}[], Any[],
@@ -83,15 +87,23 @@ function getMultiData(m::Model)
     end
 end
 
-function betas(levels,parts)
-    # Sets up the tree of all possible
-    # convex combinations of the objectives
-    map(x->([x;levels+parts].-[0;x] .-1)/parts,
-        combinations(1:(levels+parts-1),(levels-1)))
+"""
+Sets up the tree of all possible
+convex combinations of the objectives
+"""
+function betas(levels, parts)
+    map(combinations(1:(levels+parts-1),(levels-1))) do x
+        ([x;levels+parts].-[0;x] .-1)/parts
+    end
 end
+
+include("linear.jl")
 
 function _solve_ws(m::Model)
     multim = getMultiData(m)
+    if multim.linear
+        return _solve_ws_lin(m, multim)
+    end
     objectives = multim.objectives
     sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
@@ -248,6 +260,9 @@ end
 
 function _solve_eps(m::Model)
     multim = getMultiData(m)
+    if multim.linear
+        return _solve_eps_lin(m, multim)
+    end
     objectives = multim.objectives
     sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
@@ -333,7 +348,6 @@ function solvehook(m::Model; method::Symbol = :NBI,
     else
         Base.error("Multiobjective method not recognized.")
     end
-
     return status
 end
 

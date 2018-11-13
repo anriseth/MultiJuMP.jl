@@ -2,6 +2,7 @@ using MultiJuMP, JuMP
 using Test
 #using AmplNLWriter
 using Ipopt
+using Clp: ClpSolver
 
 # facts("Utopia and Nadir points") do
 #     # Create model
@@ -117,6 +118,63 @@ end
 end
 
 
+@testset "WS linear" begin
+    mmodel = MultiModel(solver = ClpSolver(), linear = true)
+    y = @variable(mmodel, 0 <= y <= 10.0)
+    z = @variable(mmodel, 0 <= z <= 10.0)
+    @constraint(mmodel, y + z <= 15.0)
+
+    # objectives
+    exp_obj1 = @expression(mmodel, -y +0.05 * z)
+    exp_obj2 = @expression(mmodel, 0.05 * y - z)
+    obj1 = SingleObjective(exp_obj1)
+    obj2 = SingleObjective(exp_obj2)
+
+    # setting objectives in the MultiData
+    multim = getMultiData(mmodel)
+    multim.objectives = [obj1, obj2]
+
+    status = solve(mmodel, method = :WS)
+    @test status == :Optimal
+
+    true_par_vals = [-10.0, -9.75, -4.5, 0.5]
+    for idx in eachindex(true_par_vals)
+        tf1 = true_par_vals[idx]
+        tf2 = true_par_vals[4 - idx + 1]
+        @test any(multim.paretofront) do v
+            v[1] ≈ tf1 && v[2] ≈ tf2 
+        end
+    end
+end
+
+@testset "EPS linear" begin
+    mmodel = MultiModel(solver = ClpSolver(), linear = true)
+    y = @variable(mmodel, 0 <= y <= 10.0)
+    z = @variable(mmodel, 0 <= z <= 10.0)
+    @constraint(mmodel, y + z <= 15.0)
+
+    # objectives
+    exp_obj1 = @expression(mmodel, -y +0.05 * z)
+    exp_obj2 = @expression(mmodel, 0.05 * y - z)
+    obj1 = SingleObjective(exp_obj1)
+    obj2 = SingleObjective(exp_obj2)
+
+    # setting objectives in the MultiData
+    multim = getMultiData(mmodel)
+    multim.objectives = [obj1, obj2]
+
+    status = solve(mmodel, method = :EPS)
+    @test status == :Optimal
+    println(multim.paretofront)
+    true_par_vals = [-10.0, -9.75, -4.5, 0.5]
+    for idx in eachindex(true_par_vals)
+        tf1 = true_par_vals[idx]
+        tf2 = true_par_vals[4 - idx + 1]
+        @test any(multim.paretofront) do v
+            v[1] ≈ tf1 && v[2] ≈ tf2 
+        end
+    end
+end
 
 @testset "TODO: Initial value test" begin
     # TODO: Let f1 have two minima and
