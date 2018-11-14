@@ -165,7 +165,6 @@ end
 
     status = solve(mmodel, method = :EPS)
     @test status == :Optimal
-    println(multim.paretovarvalues)
     true_par_pos = begin
         v = [10.0, 10.0, 5.0, 0.0]
         zip(v, reverse(v)) |> collect
@@ -174,6 +173,36 @@ end
     for (yv, zv) in true_par_pos
         @test any(multim.paretovarvalues) do v
             ≈(v[1], yv, atol = 0.01) && ≈(v[2], zv, atol = 0.01)
+        end
+    end
+end
+
+@testset "WS linear - alternative model construction" begin
+    m = Model(solver = ClpSolver())
+    mmodel = MultiModel(m, linear = true)
+    y = @variable(mmodel, 0 <= y <= 10.0)
+    z = @variable(mmodel, 0 <= z <= 10.0)
+    @constraint(mmodel, y + z <= 15.0)
+
+    # objectives
+    exp_obj1 = @expression(mmodel, -y +0.05 * z)
+    exp_obj2 = @expression(mmodel, 0.05 * y - z)
+    obj1 = SingleObjective(exp_obj1)
+    obj2 = SingleObjective(exp_obj2)
+
+    # setting objectives in the MultiData
+    multim = getMultiData(mmodel)
+    multim.objectives = [obj1, obj2]
+
+    status = solve(mmodel, method = :WS)
+    @test status == :Optimal
+
+    true_par_vals = [-10.0, -9.75, -4.5, 0.5]
+    for idx in eachindex(true_par_vals)
+        tf1 = true_par_vals[idx]
+        tf2 = true_par_vals[4 - idx + 1]
+        @test any(multim.paretofront) do v
+            v[1] ≈ tf1 && v[2] ≈ tf2 
         end
     end
 end
