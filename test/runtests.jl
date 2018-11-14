@@ -165,13 +165,15 @@ end
 
     status = solve(mmodel, method = :EPS)
     @test status == :Optimal
-    println(multim.paretofront)
-    true_par_vals = [-10.0, -9.75, -4.5, 0.5]
-    for idx in eachindex(true_par_vals)
-        tf1 = true_par_vals[idx]
-        tf2 = true_par_vals[4 - idx + 1]
-        @test any(multim.paretofront) do v
-            v[1] ≈ tf1 && v[2] ≈ tf2 
+    println(multim.paretovarvalues)
+    true_par_pos = begin
+        v = [10.0, 10.0, 5.0, 0.0]
+        zip(v, reverse(v)) |> collect
+    end
+
+    for (yv, zv) in true_par_pos
+        @test any(multim.paretovarvalues) do v
+            ≈(v[1], yv, atol = 0.01) && ≈(v[2], zv, atol = 0.01)
         end
     end
 end

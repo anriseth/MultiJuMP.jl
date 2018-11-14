@@ -99,25 +99,17 @@ function _solve_eps_lin(m::Model, multim::MultiData)
     Fmin = minimum(Phi, dims=2) # == diag(Phi)?
 
     multim.Phi = Phi
-
+    # maintain last objective, other as constraints
     @objective(m, objectives[end].sense, objectives[end].f)
 
-    @constraint(m, objconstr[i=1:numobj-1],
-                  sensemap[objectives[i].sense]*objectives[i].f
-                  <= Fmax[i])
-
+    @constraint(m, objconstr,
+                  sensemap[objectives[1].sense]*objectives[1].f
+                  <= Fmax[1])
     betatree = betas(numobj, multim.pointsperdim-1)
 
-    for betaval in 0.0:0.01:1.0
-        if count(t -> t != 0, betaval) == 1
-            # Skip individual optimisations as
-            # they are already performed
-            continue
-        end
+    for betaval in 0.0:0.001:1.0
 
-        for i in 1:numobj-1
-            JuMP.setRHS(objconstr[i], betaval*Fmin[i]+(1-betaval)*Fmax[i])
-        end
+        JuMP.setRHS(objconstr, betaval*Fmin[1]+(1-betaval)*Fmax[1])
 
         status = solve(m, ignore_solve_hook=true);
         if status != :Optimal
