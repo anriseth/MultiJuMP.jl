@@ -1,6 +1,5 @@
 julia 0.7
-JuMP 0.17.1
-Ipopt
+JuMP 0.18
 Combinatorics
 RecipesBase
 LaTeXStrings
