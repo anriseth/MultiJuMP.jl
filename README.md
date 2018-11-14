@@ -13,7 +13,6 @@ We have implemented three ways to trace out the Pareto front:
     * This method only works for biobjective optimisation as of now
 
 **Disclaimer 1**: MultiJuMP is *not* developed or maintained by the JuMP developers.  
-**Disclaimer 2**: MultiJuMP currently supports non-linear objectives only.  
 
 ## Installation
 In Julia, call `Pkg.add("MultiJuMP")` to install MultiJuMP.
@@ -21,6 +20,11 @@ In Julia, call `Pkg.add("MultiJuMP")` to install MultiJuMP.
 ## Usage
 Have a look in the `examples/` directory for different use cases, including
 tri-objective Pareto fronts.
+
+MultiJuMP supports linear problems using the `linear=true` keyword when
+calling `MultiModel(linear=true)`. Currently, only the `:EPS`
+and `:WS` methods are supported for linear problems.  
+
 As a usage example, we implement the test from
 _Das and Dennis, 1998: Normal-boundary intersection: A new method for
 generating the Pareto surface in nonlinear multicriteria optimization problems_:
