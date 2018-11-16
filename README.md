@@ -12,7 +12,7 @@ We have implemented three ways to trace out the Pareto front:
 - Constraint methods (`solve(m, method = :EPS)`)
     * This method only works for biobjective optimisation as of now
 
-**Disclaimer 1**: MultiJuMP is *not* developed or maintained by the JuMP developers.  
+**Disclaimer**: MultiJuMP is *not* developed or maintained by the JuMP developers.  
 
 ## Installation
 In Julia, call `Pkg.add("MultiJuMP")` to install MultiJuMP.
@@ -25,7 +25,35 @@ MultiJuMP supports linear problems using the `linear=true` keyword when
 calling `MultiModel(linear=true)`. Currently, only the `:EPS`
 and `:WS` methods are supported for linear problems.  
 
-As a usage example, we implement the test from
+```julia
+using MultiJuMP, JuMP
+using Clp: ClpSolver
+
+const mmodel = MultiModel(solver = ClpSolver(), linear = true)
+const y = @variable(mmodel, 0 <= y <= 10.0)
+const z = @variable(mmodel, 0 <= z <= 10.0)
+@constraint(mmodel, y + z <= 15.0)
+
+# objectives
+const exp_obj1 = @expression(mmodel, -y +0.05 * z)
+const exp_obj2 = @expression(mmodel, 0.05 * y - z)
+const obj1 = SingleObjective(exp_obj1)
+const obj2 = SingleObjective(exp_obj2)
+
+# # setting objectives in the data
+const multim = getMultiData(mmodel)
+multim.objectives = [obj1, obj2]
+
+solve(mmodel, method = :WS)
+
+using Plots: plot, title!
+plot(multim)
+title!("Extrema of the Pareto front")
+```
+
+![Linear pareto front](./img/linear.pdf)
+
+As a non-linear usage example, we implement the test from
 _Das and Dennis, 1998: Normal-boundary intersection: A new method for
 generating the Pareto surface in nonlinear multicriteria optimization problems_:
 
