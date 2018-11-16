@@ -51,7 +51,7 @@ plot(multim)
 title!("Extrema of the Pareto front")
 ```
 
-![Linear pareto front](https://cdn.rawgit.com/anriseth/MultiJuMP.jl/master/img/linear.pdf)
+![Linear pareto front](./img/linear.pdf)
 
 As a non-linear usage example, we implement the test from
 _Das and Dennis, 1998: Normal-boundary intersection: A new method for
