@@ -22,7 +22,7 @@ function _solve_ws_lin(m::Model, multim::MultiData)
         push!(multim.utopiavarvalues, [getvalue(var) for var in vararr])
         push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
 
-        Phi[:,i] = senseValue(objectives)
+        Phi[:,i] = sensevalue.(objectives)
 
         push!(multim.paretofront, getvalue(objectives))
     end
@@ -91,7 +91,7 @@ function _solve_eps_lin(m::Model, multim::MultiData)
         push!(multim.utopiavarvalues, [getvalue(var) for var in vararr])
         push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
 
-        Phi[:,i] = senseValue(objectives)
+        Phi[:,i] = sensevalue.(objectives)
 
         push!(multim.paretofront, getvalue(objectives))
     end

@@ -10,7 +10,7 @@ would not work.
 ==#
 using JuMP, MultiJuMP, Ipopt
 
-m = MultiModel(solver=IpoptSolver())
+m = multi_model(solver=IpoptSolver())
 n = 30
 
 l = -ones(n); l[1] = 0
@@ -25,7 +25,7 @@ obj1 = SingleObjective(f1, sense = :Min)
 
 obj2 = SingleObjective(f2, sense = :Min)
 
-multim = getMultiData(m)
+multim = get_multidata(m)
 multim.objectives = [obj1, obj2]
 multim.pointsperdim = 30
 solve(m, method = :NBI)

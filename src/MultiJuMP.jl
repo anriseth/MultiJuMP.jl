@@ -6,9 +6,9 @@ using JuMP
 import JuMP: JuMPTypes, getvalue
 import MathProgBase
 using RecipesBase, LaTeXStrings
-import Combinatorics.combinations
+import Combinatorics
 using LinearAlgebra
-export MultiModel, SingleObjective, getMultiData
+export multi_model, SingleObjective, get_multidata
 
 include("types.jl")
 include("linear.jl")

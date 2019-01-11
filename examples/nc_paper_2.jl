@@ -13,7 +13,7 @@ inequality-constrained extension.
 using MultiJuMP, JuMP
 using Ipopt
 
-m = MultiModel(solver = IpoptSolver())
+m = multi_model(solver = IpoptSolver())
 @variable(m, 0 <= x[i=1:2] <= 5)
 @NLexpression(m, f1, x[1])
 @NLexpression(m, f2, x[2])
@@ -26,7 +26,7 @@ obj1 = SingleObjective(f1, sense = :Min)
 obj2 = SingleObjective(f2, sense = :Min,
                        iv = Dict{Symbol, Any}(:x => [5., 0.]))
 
-multim = getMultiData(m)
+multim = get_multidata(m)
 multim.objectives = [obj1, obj2]
 multim.pointsperdim = 60
 

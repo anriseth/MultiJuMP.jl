@@ -22,14 +22,14 @@ Have a look in the `examples/` directory for different use cases, including
 tri-objective Pareto fronts.
 
 MultiJuMP supports linear problems using the `linear=true` keyword when
-calling `MultiModel(linear=true)`. Currently, only the `:EPS`
+calling `multi_model(linear=true)`. Currently, only the `:EPS`
 and `:WS` methods are supported for linear problems.  
 
 ```julia
 using MultiJuMP, JuMP
 using Clp: ClpSolver
 
-const mmodel = MultiModel(solver = ClpSolver(), linear = true)
+const mmodel = multi_model(solver = ClpSolver(), linear = true)
 const y = @variable(mmodel, 0 <= y <= 10.0)
 const z = @variable(mmodel, 0 <= z <= 10.0)
 @constraint(mmodel, y + z <= 15.0)
@@ -41,7 +41,7 @@ const obj1 = SingleObjective(exp_obj1)
 const obj2 = SingleObjective(exp_obj2)
 
 # # setting objectives in the data
-const multim = getMultiData(mmodel)
+const multim = get_multidata(mmodel)
 multim.objectives = [obj1, obj2]
 
 solve(mmodel, method = :WS)
@@ -61,7 +61,7 @@ generating the Pareto surface in nonlinear multicriteria optimization problems_:
 using MultiJuMP, JuMP
 using Ipopt
 
-m = MultiModel(solver = IpoptSolver())
+m = multi_model(solver = IpoptSolver())
 @variable(m, x[i=1:5])
 @NLexpression(m, f1, sum(x[i]^2 for i=1:5))
 @NLexpression(m, f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3)
@@ -74,7 +74,7 @@ obj1 = SingleObjective(f1, sense = :Min,
                        iv = Dict{Symbol,Any}(:x => iv1))
 obj2 = SingleObjective(f2, sense = :Min)
 
-md = getMultiData(m)
+md = get_multidata(m)
 md.objectives = [obj1, obj2]
 md.pointsperdim = 20
 solve(m, method = :NBI) # method = :WS or method = :EPS

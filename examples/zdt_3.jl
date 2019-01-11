@@ -14,7 +14,7 @@ the inequality-extended NBI method
 
 using JuMP, MultiJuMP, Ipopt
 
-m = MultiModel(solver=IpoptSolver())
+m = multi_model(solver=IpoptSolver())
 n = 30
 
 l = -ones(n); l[1] = 0
@@ -36,7 +36,7 @@ iv2[1] = 0.85
 obj2 = SingleObjective(f2, sense = :Min,
                        iv = Dict{Symbol, Any}(:x => iv2))
 
-multim = getMultiData(m)
+multim = get_multidata(m)
 multim.objectives = [obj1, obj2]
 multim.pointsperdim = 60
 # NB: solve fails with an infeasibility error 65% through the algorithm,

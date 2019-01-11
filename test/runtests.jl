@@ -4,25 +4,8 @@ using Test
 using Ipopt
 using Clp: ClpSolver
 
-# facts("Utopia and Nadir points") do
-#     # Create model
-#     m = MultiModel()
-#     @variable(m, -1 <= x <= 1)
-#     @NLexpression(m, f1, x^2)
-#     @NLexpression(m, f2, (x-0.5)^2)
-
-#     multim = getMultiData(m)
-#     multim.f1 = f1
-#     multim.f2 = f2
-
-#     @fact solve(m, method = :WS) --> :Optimal
-#     @fact multim.utopia --> roughly([0.0, 0.0], 1e-5)
-#     @fact multim.nadir --> roughly([0.25, 0.25], 1e-5)
-# end
-
-
 @testset "NBI optimisation" begin
-    m = MultiModel(solver = IpoptSolver(print_level=0))
+    m = multi_model(solver = IpoptSolver(print_level=0))
     @variable(m, x[i=1:5])
     @NLexpressions m begin
         f1, sum(x[i]^2 for i=1:5)
@@ -37,7 +20,7 @@ using Clp: ClpSolver
     obj1 = SingleObjective(f1)
     obj2 = SingleObjective(f2)
 
-    multim = getMultiData(m)
+    multim = get_multidata(m)
     multim.objectives = [obj1, obj2]
     multim.pointsperdim = 5
     solve(m, method = :NBI)
@@ -54,7 +37,7 @@ using Clp: ClpSolver
 end
 
 @testset "WS optimisation" begin
-    m = MultiModel(solver = IpoptSolver(print_level=0))
+    m = multi_model(solver = IpoptSolver(print_level=0))
     @variable(m, x[i=1:5])
     @NLexpressions m begin
         f1, sum(x[i]^2 for i=1:5)
@@ -69,7 +52,7 @@ end
     obj1 = SingleObjective(f1)
     obj2 = SingleObjective(f2)
 
-    multim = getMultiData(m)
+    multim = get_multidata(m)
     multim.objectives = [obj1, obj2]
     multim.pointsperdim = 5
     solve(m, method = :WS)
@@ -86,7 +69,7 @@ end
 end
 
 @testset "EPS optimisation" begin
-    m = MultiModel(solver = IpoptSolver(print_level=0))
+    m = multi_model(solver = IpoptSolver(print_level=0))
     @variable(m, x[i=1:5])
         @NLexpressions m begin
         f1, sum(x[i]^2 for i=1:5)
@@ -101,7 +84,7 @@ end
     obj1 = SingleObjective(f1)
     obj2 = SingleObjective(f2)
 
-    multim = getMultiData(m)
+    multim = get_multidata(m)
     multim.objectives = [obj1, obj2]
     multim.pointsperdim = 5
     solve(m, method = :EPS)
@@ -119,7 +102,7 @@ end
 
 
 @testset "WS linear" begin
-    mmodel = MultiModel(solver = ClpSolver(), linear = true)
+    mmodel = multi_model(solver = ClpSolver(), linear = true)
     y = @variable(mmodel, 0 <= y <= 10.0)
     z = @variable(mmodel, 0 <= z <= 10.0)
     @constraint(mmodel, y + z <= 15.0)
@@ -131,7 +114,7 @@ end
     obj2 = SingleObjective(exp_obj2)
 
     # setting objectives in the MultiData
-    multim = getMultiData(mmodel)
+    multim = get_multidata(mmodel)
     multim.objectives = [obj1, obj2]
 
     status = solve(mmodel, method = :WS)
@@ -148,7 +131,7 @@ end
 end
 
 @testset "EPS linear" begin
-    mmodel = MultiModel(solver = ClpSolver(), linear = true)
+    mmodel = multi_model(solver = ClpSolver(), linear = true)
     y = @variable(mmodel, 0 <= y <= 10.0)
     z = @variable(mmodel, 0 <= z <= 10.0)
     @constraint(mmodel, y + z <= 15.0)
@@ -160,7 +143,7 @@ end
     obj2 = SingleObjective(exp_obj2)
 
     # setting objectives in the MultiData
-    multim = getMultiData(mmodel)
+    multim = get_multidata(mmodel)
     multim.objectives = [obj1, obj2]
 
     status = solve(mmodel, method = :EPS)
@@ -179,7 +162,7 @@ end
 
 @testset "WS linear - alternative model construction" begin
     m = Model(solver = ClpSolver())
-    mmodel = MultiModel(m, linear = true)
+    mmodel = multi_model(m, linear = true)
     y = @variable(mmodel, 0 <= y <= 10.0)
     z = @variable(mmodel, 0 <= z <= 10.0)
     @constraint(mmodel, y + z <= 15.0)
@@ -191,7 +174,7 @@ end
     obj2 = SingleObjective(exp_obj2)
 
     # setting objectives in the MultiData
-    multim = getMultiData(mmodel)
+    multim = get_multidata(mmodel)
     multim.objectives = [obj1, obj2]
 
     status = solve(mmodel, method = :WS)

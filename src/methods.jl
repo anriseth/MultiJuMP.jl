@@ -1,5 +1,5 @@
 function _solve_ws(m::Model)
-    multim = getMultiData(m)
+    multim = get_multidata(m)
     if multim.linear
         return _solve_ws_lin(m, multim)
     end
@@ -26,7 +26,7 @@ function _solve_ws(m::Model)
         push!(multim.utopiavarvalues, [getvalue(var) for var in vararr])
         push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
 
-        Phi[:,i] = senseValue(objectives)
+        Phi[:,i] = sensevalue.(objectives)
 
         push!(multim.paretofront, getvalue(objectives))
     end
@@ -69,7 +69,7 @@ function _solve_ws(m::Model)
 end
 
 function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
-    multim = getMultiData(m)
+    multim = get_multidata(m)
     objectives = multim.objectives
     sensemap = Dict(:Min => 1.0, :Max => -1.0)
 
@@ -95,7 +95,7 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
         push!(multim.utopiavarvalues, [getvalue(var) for var in vararr])
         push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
 
-        Phi[:,i] = senseValue(objectives)
+        Phi[:,i] = sensevalue.(objectives)
 
         push!(multim.paretofront, getvalue(objectives))
     end
@@ -158,7 +158,7 @@ function _solve_nbi(m::Model, inequalityconstraint::Bool = false)
 end
 
 function _solve_eps(m::Model)
-    multim = getMultiData(m)
+    multim = get_multidata(m)
     if multim.linear
         return _solve_eps_lin(m, multim)
     end
@@ -192,7 +192,7 @@ function _solve_eps(m::Model)
         push!(multim.utopiavarvalues, [getvalue(var) for var in vararr])
         push!(multim.paretovarvalues, [getvalue(var) for var in vararr])
 
-        Phi[:,i] = senseValue(objectives)
+        Phi[:,i] = sensevalue.(objectives)
 
         push!(multim.paretofront, getvalue(objectives))
     end

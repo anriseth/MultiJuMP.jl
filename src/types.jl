@@ -1,3 +1,6 @@
+"""
+Wrapper for single-objective function with domain type VT
+"""
 mutable struct SingleObjective
     f # JuMP-expression TODO: use JuMPTypes or something?
     sense::Symbol
@@ -7,13 +10,17 @@ mutable struct SingleObjective
 end
 
 SingleObjective() = SingleObjective(Any, :Min, Dict{Symbol,Any}(), NaN)
-SingleObjective(f::JuMPTypes; sense::Symbol = :Min,
-                iv::Dict{Symbol,Any} = Dict{Symbol,Any}(),
-                bound::Float64 = NaN) = SingleObjective(f, sense, iv, bound)
-
+function SingleObjective(f::JuMPTypes; sense::Symbol = :Min,
+                         iv::Dict{Symbol,Any} = Dict{Symbol,Any}(),
+                         bound::Float64 = NaN)
+    SingleObjective(f, sense, iv, bound)
+end
 getvalue(obj::SingleObjective) =  getvalue(obj.f)
 
-function senseValue(obj::SingleObjective)
+"""
+Orients the objective in the minimization sense
+"""
+function sensevalue(obj::SingleObjective)
     # To get Φ and Fstar with right signs
     if obj.sense == :Max
         return -getvalue(obj.f)
@@ -21,9 +28,6 @@ function senseValue(obj::SingleObjective)
         return getvalue(obj.f)
     end
 end
-
-getvalue(arr::Array{SingleObjective}) = map(getvalue, arr)
-senseValue(arr::Array{SingleObjective}) = map(senseValue, arr)
 
 """
 Stores extension data for multi-objective
@@ -53,7 +57,7 @@ mutable struct MultiData{Tx,To}
 end
 
 
-function MultiModel(;solver=nothing, linear=false)
+function multi_model(;solver=nothing, linear=false)
     m = Model(solver=solver)
     m.solvehook = solvehook
 
@@ -67,7 +71,7 @@ function MultiModel(;solver=nothing, linear=false)
     return m
 end
 
-function MultiModel(m::JuMP.AbstractModel; linear=false)
+function multi_model(m::JuMP.AbstractModel; linear=false)
     m.solvehook = solvehook
     m.ext[:Multi] = MultiData(Array{SingleObjective}(undef, 0),
                               SingleObjective(), SingleObjective(),
@@ -82,7 +86,7 @@ end
 """
 Gets the MultiData struct from a model if it exists
 """
-function getMultiData(m::Model)
+function get_multidata(m::Model)
     if haskey(m.ext, :Multi)
         return m.ext[:Multi]::MultiData
     else
@@ -95,7 +99,7 @@ Sets up the tree of all possible
 convex combinations of the objectives
 """
 function betas(levels, parts)
-    map(combinations(1:(levels+parts-1),(levels-1))) do x
+    map(Combinatorics.combinations(1:(levels+parts-1),(levels-1))) do x
         ([x;levels+parts].-[0;x] .-1)/parts
     end
 end
