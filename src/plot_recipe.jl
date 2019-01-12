@@ -27,5 +27,5 @@
 end
 
 @recipe function f(m::JuMP.Model)
-    plot(getMultiData(m))
+    plot(get_multidata(m))
 end

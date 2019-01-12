@@ -9,7 +9,7 @@ SIAM Journal on Optimization, 8(3):631–657, 1998.
 using MultiJuMP, JuMP
 using Ipopt
 
-m = MultiModel(solver = IpoptSolver())
+m = multi_model(solver = IpoptSolver())
 @variable(m, x[i=1:5])
 @NLexpression(m, f1, sum(x[i]^2 for i=1:5))
 @NLexpression(m, f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3)
@@ -20,7 +20,7 @@ m = MultiModel(solver = IpoptSolver())
 obj1 = SingleObjective(f1)
 obj2 = SingleObjective(f2)
 
-md = getMultiData(m)
+md = get_multidata(m)
 md.objectives = [obj1, obj2]
 md.pointsperdim = 20
 solve(m, method = :NBI)

@@ -13,7 +13,7 @@ not necessary with the NBI method.
 using MultiJuMP, JuMP
 using Ipopt
 
-m = MultiModel(solver = IpoptSolver())
+m = multi_model(solver = IpoptSolver())
 @variable(m, x[i=1:2])
 @NLexpression(m, f1, x[1])
 @NLexpression(m, f2, x[2])
@@ -22,7 +22,7 @@ m = MultiModel(solver = IpoptSolver())
 obj1 = SingleObjective(f1, sense = :Min)
 obj2 = SingleObjective(f2, sense = :Min)
 
-multim = getMultiData(m)
+multim = get_multidata(m)
 multim.objectives = [obj1, obj2]
 multim.pointsperdim = 20
 solve(m, method = :NBI)

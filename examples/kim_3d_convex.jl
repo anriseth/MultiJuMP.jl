@@ -14,7 +14,7 @@ Structural and Multidisciplinary Optimization, 31(2):105–116, 2006.
 using MultiJuMP, JuMP
 using Ipopt
 
-m = MultiModel(solver = IpoptSolver())
+m = multi_model(solver = IpoptSolver())
 
 @variable(m, x[i=1:3] >= 0)
 @NLexpression(m, f1, x[1])
@@ -32,7 +32,7 @@ obj3 = SingleObjective(f3, sense = :Max)#,
                        #iv = Dict{Symbol, Any}(:x => [0, 0., 2.]))
 
 
-md = getMultiData(m)
+md = get_multidata(m)
 md.objectives = [obj1, obj2, obj3]
 #md.objectives = [obj1, obj2]
 md.pointsperdim = 10
