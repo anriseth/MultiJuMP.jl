@@ -7,9 +7,10 @@ MultiJuMP enables the user to easily run multiobjective optimisation problems
 and generate Pareto fronts. The code is built as an extension of
 [JuMP](https://github.com/JuliaOpt/JuMP.jl).
 We have implemented three ways to trace out the Pareto front:
-- Normal Boundary Intersection (`solve(m, method = :NBI)`)
-- Weighted sums (`solve(m, method = :WS)`)
-- Constraint methods (`solve(m, method = :EPS)`)
+- Normal Boundary Intersection (`solve(m, method = NBI())`)
+    * This method is applicable only for nonlinear optimisation
+- Weighted sums (`solve(m, method = WeightedSum())`)
+- Constraint methods (`solve(m, method = EpsilonCons())`)
     * This method only works for biobjective optimisation as of now
 
 **Disclaimer**: MultiJuMP is *not* developed or maintained by the JuMP developers.  
@@ -18,7 +19,7 @@ We have implemented three ways to trace out the Pareto front:
 In Julia, call `Pkg.add("MultiJuMP")` to install MultiJuMP.
 
 ## Usage
-Have a look in the `examples/` directory for different use cases, including
+Have a look at the tests and `examples/` directory for different use cases, including
 tri-objective Pareto fronts.
 
 MultiJuMP supports linear problems using the `linear=true` keyword when

@@ -28,7 +28,7 @@ obj2 = SingleObjective(f2, sense = :Min,
 multim = get_multidata(m)
 multim.objectives = [obj1, obj2]
 multim.pointsperdim = 40
-solve(m, method = :NBI)
+solve(m, method = NBI())
 
 using Plots
 plot(multim)
