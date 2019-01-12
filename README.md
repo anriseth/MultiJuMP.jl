@@ -22,8 +22,8 @@ Have a look in the `examples/` directory for different use cases, including
 tri-objective Pareto fronts.
 
 MultiJuMP supports linear problems using the `linear=true` keyword when
-calling `multi_model(linear=true)`. Currently, only the `:EPS`
-and `:WS` methods are supported for linear problems.  
+calling `multi_model(linear=true)`. Currently, only the `EpsilonCons()`
+and `WeightedSum()` methods are supported for linear problems.  
 
 ```julia
 using MultiJuMP, JuMP
@@ -44,7 +44,7 @@ const obj2 = SingleObjective(exp_obj2)
 const multim = get_multidata(mmodel)
 multim.objectives = [obj1, obj2]
 
-solve(mmodel, method = :WS)
+solve(mmodel, method = WeightedSum())
 
 using Plots: plot, title!
 plot(multim)
@@ -77,7 +77,7 @@ obj2 = SingleObjective(f2, sense = :Min)
 md = get_multidata(m)
 md.objectives = [obj1, obj2]
 md.pointsperdim = 20
-solve(m, method = :NBI) # method = :WS or method = :EPS
+solve(m, method = NBI(false)) # or method = WeightedSum() or method = EpsilonCons()
 ```
 
 Plotting with `Plots.jl` is supported via recipes:

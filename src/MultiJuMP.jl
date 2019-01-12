@@ -9,10 +9,12 @@ using RecipesBase, LaTeXStrings
 import Combinatorics
 using LinearAlgebra
 export multi_model, SingleObjective, get_multidata
+export WeightedSum, EpsilonCons, NBI
 
 include("types.jl")
-include("linear.jl")
 include("methods.jl")
+include("linear.jl")
+include("nonlinear.jl")
 include("plot_recipe.jl")
 
 end

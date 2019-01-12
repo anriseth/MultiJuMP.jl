@@ -23,14 +23,14 @@ using Clp: ClpSolver
     multim = get_multidata(m)
     multim.objectives = [obj1, obj2]
     multim.pointsperdim = 5
-    solve(m, method = :NBI)
+    solve(m, method = MultiJuMP.NBI(false))
 
     f1arr = convert(Array{Float64},
                     [multim.paretofront[i][1] for i in 1:multim.pointsperdim])
     f2arr = convert(Array{Float64},
                     [multim.paretofront[i][2] for i in 1:multim.pointsperdim])
-    f1true = [0.555081, 10.0, 7.16982, 4.48665, 2.08008]
-    f2true = [2.13057, -4.01115, -2.78066, -1.45458, 0.0513689]
+    f1true = [0.555081, 10.0    , 7.16982 , 4.48665 , 2.08008]
+    f2true = [2.13057 , -4.01115, -2.78066, -1.45458, 0.0513689]
 
     @test isapprox(f1arr, f1true, atol=1e-2)
     @test isapprox(f2arr, f2true, atol=1e-2)
@@ -55,7 +55,7 @@ end
     multim = get_multidata(m)
     multim.objectives = [obj1, obj2]
     multim.pointsperdim = 5
-    solve(m, method = :WS)
+    solve(m, method = MultiJuMP.WeightedSum())
 
     f1arr = convert(Array{Float64},
                     [multim.paretofront[i][1] for i in 1:multim.pointsperdim])
@@ -87,7 +87,7 @@ end
     multim = get_multidata(m)
     multim.objectives = [obj1, obj2]
     multim.pointsperdim = 5
-    solve(m, method = :EPS)
+    solve(m, method = MultiJuMP.EpsilonCons())
 
     f1arr = convert(Array{Float64},
                     [multim.paretofront[i][1] for i in 1:multim.pointsperdim])
@@ -117,7 +117,7 @@ end
     multim = get_multidata(mmodel)
     multim.objectives = [obj1, obj2]
 
-    status = solve(mmodel, method = :WS)
+    status = solve(mmodel, method = MultiJuMP.WeightedSum())
     @test status == :Optimal
 
     true_par_vals = [-10.0, -9.75, -4.5, 0.5]
@@ -146,7 +146,7 @@ end
     multim = get_multidata(mmodel)
     multim.objectives = [obj1, obj2]
 
-    status = solve(mmodel, method = :EPS)
+    status = solve(mmodel, method = MultiJuMP.EpsilonCons())
     @test status == :Optimal
     true_par_pos = begin
         v = [10.0, 10.0, 5.0, 0.0]
@@ -177,7 +177,7 @@ end
     multim = get_multidata(mmodel)
     multim.objectives = [obj1, obj2]
 
-    status = solve(mmodel, method = :WS)
+    status = solve(mmodel, method = MultiJuMP.WeightedSum())
     @test status == :Optimal
 
     true_par_vals = [-10.0, -9.75, -4.5, 0.5]

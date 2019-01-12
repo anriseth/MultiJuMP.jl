@@ -15,7 +15,7 @@ function SingleObjective(f::JuMPTypes; sense::Symbol = :Min,
                          bound::Float64 = NaN)
     SingleObjective(f, sense, iv, bound)
 end
-getvalue(obj::SingleObjective) =  getvalue(obj.f)
+getvalue(obj::SingleObjective) = getvalue(obj.f)
 
 """
 Orients the objective in the minimization sense
@@ -54,6 +54,7 @@ mutable struct MultiData{Tx,To}
 
     Phi::Array{To,2}
     Fstar::Vector{To}
+    inequality::Bool
 end
 
 
@@ -67,7 +68,7 @@ function multi_model(;solver=nothing, linear=false)
                               10,
                               Vector{Float64}[], Float64[],
                               Float64[], Vector{Float64}[], Any[],
-                              Array{Float64}(undef, 2,2), Array{Float64}(undef, 2))
+                              Array{Float64}(undef, 2,2), Array{Float64}(undef, 2), false)
     return m
 end
 
@@ -79,7 +80,7 @@ function multi_model(m::JuMP.AbstractModel; linear=false)
                               10,
                               Vector{Float64}[], Float64[],
                               Float64[], Vector{Float64}[], Any[],
-                              Array{Float64}(undef, 2,2), Array{Float64}(undef, 2))
+                              Array{Float64}(undef, 2,2), Array{Float64}(undef, 2), false)
     return m
 end
 
