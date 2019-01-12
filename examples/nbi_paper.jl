@@ -23,7 +23,7 @@ obj2 = SingleObjective(f2)
 md = get_multidata(m)
 md.objectives = [obj1, obj2]
 md.pointsperdim = 20
-solve(m, method = :NBI)
+solve(m, method = NBI())
 
 using Plots
 plot(md)

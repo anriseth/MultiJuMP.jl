@@ -6,6 +6,7 @@ struct EpsilonCons <: MultiMethod end
 struct NBI <: MultiMethod
     inequality::Bool
 end
+NBI() = NBI(false)
 
 abstract type ProblemLinearity end
 struct LinearProblem <: ProblemLinearity end

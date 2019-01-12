@@ -166,7 +166,7 @@ function multisolve(m::Model, mdata::MultiData, ::EpsilonCons, ::NonLinearProble
         # TODO:
         # The logic  here becomes difficult, as the feasible region will require
         # a dependency between the constraints
-        Base.error(":EPS is thought through for > 2 objectives yet")
+        Base.error("EpsilonCons is thought through for > 2 objectives yet")
     end
 
     # Individual minimisations

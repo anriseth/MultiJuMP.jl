@@ -30,8 +30,7 @@ multim = get_multidata(m)
 multim.objectives = [obj1, obj2]
 multim.pointsperdim = 60
 
-solve(m, method = :NBI, inequalityconstraint = true)
-#solve(m, method = :NBI)
+solve(m, method = NBI(true)) # inequalityconstraint = true
 
 function pltfun(x1)
     setvalue(x[1], x1)
