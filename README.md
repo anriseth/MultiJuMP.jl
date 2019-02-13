@@ -55,8 +55,14 @@ nadirpoint = getnadir(multim)
 Plotting  with `Plots.jl` is supported via recipes:
 ```julia
 using Plots: plot, title!
-plot(multim)
-title!("Extrema of the Pareto front")
+pltlin = plot(multim)
+title!(pltlin, "Extrema of the Pareto front")
+
+# Show Utopia and Nadir points
+# (This is probably a hacky way to do this)
+scatter!(pltlin,
+    [utopiapoint[1], nadirpoint[1]], [utopiapoint[2], nadirpoint[2]],
+    label="Utopia/Nadir")
 ```
 
 ![Linear pareto front](./img/linear.svg)
