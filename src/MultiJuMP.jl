@@ -9,6 +9,7 @@ using RecipesBase, LaTeXStrings
 import Combinatorics
 using LinearAlgebra
 export multi_model, SingleObjective, get_multidata
+export getutopia, getnadir
 export WeightedSum, EpsilonCons, NBI
 
 include("types.jl")
