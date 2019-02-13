@@ -9,7 +9,7 @@ mutable struct SingleObjective
     bound::Float64 # Hard lower/upper depending on sense
 end
 
-SingleObjective() = SingleObjective(Any, :Min, Dict{Symbol,Any}(), NaN)
+SingleObjective(; sense = :Min) = SingleObjective(Any, sense, Dict{Symbol,Any}(), NaN)
 function SingleObjective(f::JuMPTypes; sense::Symbol = :Min,
                          iv::Dict{Symbol,Any} = Dict{Symbol,Any}(),
                          bound::Float64 = NaN)
@@ -35,10 +35,6 @@ optimization inside JuMP Model
 """
 mutable struct MultiData{Tx,To}
     objectives::Vector{SingleObjective}
-    f1::SingleObjective
-    f2::SingleObjective
-    normalf1
-    normalf2
 
     linear::Bool
     # Number of points in each direction
@@ -47,8 +43,6 @@ mutable struct MultiData{Tx,To}
     #
     # stored values
     utopiavarvalues::Vector{Vector{Tx}}
-    utopia::Vector{To}
-    nadir::Vector{Tx}
     paretovarvalues::Vector{Vector{To}}
     paretofront
 
@@ -57,36 +51,28 @@ mutable struct MultiData{Tx,To}
     inequality::Bool
 end
 
+MultiData(; pointsperdim=10, linear=false, inequality=false) =
+    MultiData(Array{SingleObjective}(undef, 0),
+              linear, pointsperdim,
+              Vector{Float64}[], Vector{Float64}[], Any[],
+              Array{Float64}(undef, 2,2),
+              Array{Float64}(undef, 2), inequality)
 
-function multi_model(;solver=nothing, linear=false)
+function multi_model(;solver=JuMP.UnsetSolver(), linear=false)
     m = Model(solver=solver)
-    m.solvehook = solvehook
-
-    m.ext[:Multi] = MultiData(Array{SingleObjective}(undef, 0),
-                              SingleObjective(), SingleObjective(),
-                              Any, Any, linear,
-                              10,
-                              Vector{Float64}[], Float64[],
-                              Float64[], Vector{Float64}[], Any[],
-                              Array{Float64}(undef, 2,2), Array{Float64}(undef, 2), false)
-    return m
+    return multi_model(m; linear=linear)
 end
 
 function multi_model(m::JuMP.AbstractModel; linear=false)
-    m.solvehook = solvehook
-    m.ext[:Multi] = MultiData(Array{SingleObjective}(undef, 0),
-                              SingleObjective(), SingleObjective(),
-                              Any, Any, linear,
-                              10,
-                              Vector{Float64}[], Float64[],
-                              Float64[], Vector{Float64}[], Any[],
-                              Array{Float64}(undef, 2,2), Array{Float64}(undef, 2), false)
+    m.solvehook = solvehook # defined in methods.jl
+    m.ext[:Multi] = MultiData(;linear=linear)
     return m
 end
 
 """
 Gets the MultiData struct from a model if it exists
 """
+
 function get_multidata(m::Model)
     if haskey(m.ext, :Multi)
         return m.ext[:Multi]::MultiData
