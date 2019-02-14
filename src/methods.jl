@@ -37,26 +37,19 @@ Extract the Utopia point from the MultiData struct.
 """
 function getutopia(m::MultiData)
     Fmin = diag(m.Phi)
-
     # Convert values depending on whether
     # we maximize or minimize them.
-    sensemap = Dict(:Min => 1.0, :Max => -1.0)
-    multiplier = [sensemap[obj.sense] for obj in m.objectives]
-    return Fmin .* multiplier
+    multiplier = (obj.sense == :Max ? -1. : 1. for obj in m.objectives)
+    return [mult * f for (mult, f) in zip(multiplier, Fmin)]
 end
 
 """
 Extract the Nadir point from the MultiData struct.
 """
 function getnadir(m::MultiData)
-    Fmax = maximum(m.Phi, dims=2)
-    # Flatten array  as `maximum` returns it as a column vector.
-    # TODO: Is there a better way to do this?
-    Fmax = Fmax[:]
-
+    Fmax = (f for f in maximum(m.Phi, dims=2))
     # Convert values depending on whether
     # we maximize or minimize them.
-    sensemap = Dict(:Min => 1.0, :Max => -1.0)
-    multiplier = [sensemap[obj.sense] for obj in m.objectives]
-    return Fmax .* multiplier
+    multiplier = (obj.sense == :Max ? -1. : 1. for obj in m.objectives)
+    return [mult * f for (mult, f) in zip(multiplier, Fmax)]
 end
