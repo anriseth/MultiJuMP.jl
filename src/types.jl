@@ -72,7 +72,6 @@ end
 """
 Gets the MultiData struct from a model if it exists
 """
-
 function get_multidata(m::Model)
     if haskey(m.ext, :Multi)
         return m.ext[:Multi]::MultiData

@@ -12,7 +12,7 @@ struct LinearProblem <: ProblemLinearity end
 struct NonLinearProblem <: ProblemLinearity end
 
 """
-`multisolve(m::Model, data::MultiData, met::MultiMethod, lin::ProblemLinearity)`
+    multisolve(m::Model, data::MultiData, met::MultiMethod, lin::ProblemLinearity)
 
 Solves the multiobjective problem of type `lin` with method `met`.
 """
