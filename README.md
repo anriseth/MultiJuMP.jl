@@ -13,7 +13,7 @@ We have implemented three ways to trace out the Pareto front:
 - Constraint methods (`solve(m, method = EpsilonCons())`)
     * This method only works for biobjective optimisation as of now
 
-**Disclaimer**: MultiJuMP is *not* developed or maintained by the JuMP developers.  
+**Disclaimer**: MultiJuMP is *not* developed or maintained by the JuMP developers.
 
 ## Installation
 In Julia, call `Pkg.add("MultiJuMP")` to install MultiJuMP.
@@ -24,7 +24,7 @@ tri-objective Pareto fronts.
 
 MultiJuMP supports linear problems using the `linear=true` keyword when
 calling `multi_model(linear=true)`. Currently, only the `EpsilonCons()`
-and `WeightedSum()` methods are supported for linear problems.  
+and `WeightedSum()` methods are supported for linear problems.
 
 ```julia
 using MultiJuMP, JuMP
@@ -41,15 +41,28 @@ const exp_obj2 = @expression(mmodel, 0.05 * y - z)
 const obj1 = SingleObjective(exp_obj1)
 const obj2 = SingleObjective(exp_obj2)
 
-# # setting objectives in the data
+# setting objectives in the data
 const multim = get_multidata(mmodel)
 multim.objectives = [obj1, obj2]
 
 solve(mmodel, method = WeightedSum())
 
+# Get the Utopia and Nadir points
+utopiapoint = getutopia(multim)
+nadirpoint = getnadir(multim)
+```
+
+Plotting  with `Plots.jl` is supported via recipes:
+```julia
 using Plots: plot, title!
-plot(multim)
-title!("Extrema of the Pareto front")
+pltlin = plot(multim)
+title!(pltlin, "Extrema of the Pareto front")
+
+# Show Utopia and Nadir points
+# (This is probably a hacky way to do this)
+scatter!(pltlin,
+    [utopiapoint[1], nadirpoint[1]], [utopiapoint[2], nadirpoint[2]],
+    label="Utopia/Nadir")
 ```
 
 ![Linear pareto front](./img/linear.svg)
@@ -79,13 +92,13 @@ md = get_multidata(m)
 md.objectives = [obj1, obj2]
 md.pointsperdim = 20
 solve(m, method = NBI(false)) # or method = WeightedSum() or method = EpsilonCons()
-```
 
-Plotting with `Plots.jl` is supported via recipes:
-```julia
+# Get the Utopia and Nadir points
+utopiapoint = getutopia(md)
+nadirpoint = getnadir(md)
+
 using Plots
 pltnbi = plot(md)
 ```
-<!-- Github bug
-![Pareto front example](./img/pareto_example.svg) -->
-![Pareto front example](https://cdn.rawgit.com/anriseth/MultiJuMP.jl/master/img/pareto_example.svg)
+
+![NBI Pareto front example](./img/pareto_example.svg)

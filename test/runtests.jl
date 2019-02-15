@@ -4,6 +4,20 @@ using Test
 using Ipopt
 using Clp: ClpSolver
 
+
+@testset "Utopia and Nadir points" begin
+    mdata = MultiJuMP.MultiData()
+    push!(mdata.objectives, SingleObjective(;sense = :Min))
+    push!(mdata.objectives, SingleObjective(;sense = :Max))
+    mdata.Phi .= [1 2; 3 -1]
+    nadir = [2.0, -3.0]
+    utopia = [1.0, 1.0]
+
+    @test getnadir(mdata) == nadir
+    @test getutopia(mdata) == utopia
+end
+
+
 @testset "NBI optimisation" begin
     m = multi_model(solver = IpoptSolver(print_level=0))
     @variable(m, x[i=1:5])
@@ -125,7 +139,7 @@ end
         tf1 = true_par_vals[idx]
         tf2 = true_par_vals[4 - idx + 1]
         @test any(multim.paretofront) do v
-            v[1] ≈ tf1 && v[2] ≈ tf2 
+            v[1] ≈ tf1 && v[2] ≈ tf2
         end
     end
 end
@@ -185,10 +199,11 @@ end
         tf1 = true_par_vals[idx]
         tf2 = true_par_vals[4 - idx + 1]
         @test any(multim.paretofront) do v
-            v[1] ≈ tf1 && v[2] ≈ tf2 
+            v[1] ≈ tf1 && v[2] ≈ tf2
         end
     end
 end
+
 
 @testset "TODO: Initial value test" begin
     # TODO: Let f1 have two minima and
