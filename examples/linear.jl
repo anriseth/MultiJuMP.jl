@@ -20,7 +20,7 @@ const obj2 = SingleObjective(exp_obj2)
 const multim = get_multidata(mmodel)
 multim.objectives = [obj1, obj2]
 
-solve(mmodel, method = :WS)
+solve(mmodel, method = WeightedSum())
 
 using Plots: plot
 plot(multim)
