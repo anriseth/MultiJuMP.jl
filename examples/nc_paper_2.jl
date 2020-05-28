@@ -13,29 +13,29 @@ inequality-constrained extension.
 using MultiJuMP, JuMP
 using Ipopt
 
-m = multi_model(solver = IpoptSolver())
+m = multi_model(Ipopt.Optimizer)
 @variable(m, 0 <= x[i=1:2] <= 5)
 @NLexpression(m, f1, x[1])
 @NLexpression(m, f2, x[2])
 @NLconstraint(m, 5exp(-x[1])+2exp(-0.5(x[1]-3)^2) <= x[2])
 
-obj1 = SingleObjective(f1, sense = :Min)
+obj1 = SingleObjective(f1, sense = MOI.MIN_SENSE)
 
 # As the problem is nonconvex, we have to supply the
 # initial value to get the global minimum of f2
-obj2 = SingleObjective(f2, sense = :Min,
-                       iv = Dict{Symbol, Any}(:x => [5., 0.]))
+obj2 = SingleObjective(f2, sense = MOI.MIN_SENSE,
+                       iv = Dict{String, Any}("x[$i]" => j for (i,j) in enumerate([5., 0.])))
 
 multim = get_multidata(m)
 multim.objectives = [obj1, obj2]
 multim.pointsperdim = 60
 
-solve(m, method = NBI(true)) # inequalityconstraint = true
+optimize!(m, method = NBI(true)) # inequalityconstraint = true
 
 function pltfun(x1)
-    setvalue(x[1], x1)
-    setvalue(x[2:n], zeros(n-1))
-    getvalue(f2)
+    set_start_value(x[1], x1)
+    set_start_value(x[2:n], zeros(n-1))
+    value(f2)
 end
 pltfun(x1) = 5exp(-x1)+2exp(-0.5(x1-3)^2)
 

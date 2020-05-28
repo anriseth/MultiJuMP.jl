@@ -14,7 +14,7 @@ Structural and Multidisciplinary Optimization, 31(2):105–116, 2006.
 using MultiJuMP, JuMP
 using Ipopt
 
-m = multi_model(solver = IpoptSolver())
+m = multi_model(Ipopt.Optimizer)
 
 @variable(m, x[i=1:3] >= 0)
 @NLexpression(m, f1, x[1])
@@ -22,21 +22,21 @@ m = multi_model(solver = IpoptSolver())
 @NLexpression(m, f3, x[3])
 @NLconstraint(m, x[1]^4+2x[2]^3+5x[3]^2<=1)
 
-obj1 = SingleObjective(f1, sense = :Max)#,
-                       #iv = Dict{Symbol, Any}(:x => [0, 0., 1.2]))
+obj1 = SingleObjective(f1, sense = MOI.MAX_SENSE)#,
+                       #iv = Dict{String, Any}("x[$i]" => j for (i,j) in enumerate([0, 0., 1.2])))
 
-obj2 = SingleObjective(f2, sense = :Max)#,
-                       #iv = Dict{Symbol, Any}(:x => [0, 0., 1.2]))
+obj2 = SingleObjective(f2, sense = MOI.MAX_SENSE)#,
+                       #iv = Dict{String, Any}("x[$i]" => j for (i,j) in enumerate([0, 0., 1.2])))
 
-obj3 = SingleObjective(f3, sense = :Max)#,
-                       #iv = Dict{Symbol, Any}(:x => [0, 0., 2.]))
+obj3 = SingleObjective(f3, sense = MOI.MAX_SENSE)#,
+                       #iv = Dict{String, Any}("x[$i]" => j for (i,j) in enumerate([0, 0., 2.])))
 
 
 md = get_multidata(m)
 md.objectives = [obj1, obj2, obj3]
 #md.objectives = [obj1, obj2]
 md.pointsperdim = 10
-solve(m, method = NBI())
+optimize!(m, method = NBI())
 
 using Plots
 pyplot()

@@ -1,8 +1,8 @@
 @recipe function f{Tx,To}(md::MultiData{Tx,To})
     seriestype --> :scatter
-    xlabel --> L"$f_1$"
-    ylabel --> L"$f_2$"
-    zlabel --> L"$f_3$"
+    xguide --> L"$f_1$"
+    yguide --> L"$f_2$"
+    zguide --> L"$f_3$"
     label --> ""
     numobjectives = length(md.objectives)
     if numobjectives > 3 || numobjectives < 2

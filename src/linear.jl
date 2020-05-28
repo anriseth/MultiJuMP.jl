@@ -1,9 +1,9 @@
 
 function multisolve(m::Model, mdata::MultiData, ::WeightedSum, ::LinearProblem)
     objectives = mdata.objectives
-    sensemap = Dict(:Min => 1.0, :Max => -1.0)
+    sensemap = Dict(MOI.MIN_SENSE => 1.0, MOI.MAX_SENSE => -1.0)
 
-    vararr = [JuMP.Variable(m,i) for i in 1:MathProgBase.numvar(m)]
+    vararr = all_variables(m)
 
     numobj = length(objectives)
     Phi = zeros(numobj,numobj)
@@ -12,20 +12,19 @@ function multisolve(m::Model, mdata::MultiData, ::WeightedSum, ::LinearProblem)
     for (i, objective) in enumerate(objectives)
         @objective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
-            # TODO: What is the correct way to set these values?
-            setvalue(m.objDict[key], value)
+            set_start_value(variable_by_name(m, key), value)
         end
-        status = solve(m, ignore_solve_hook=true);
-        if status != :Optimal
-            return status
+        optimize!(m, ignore_optimize_hook=true);
+        if !(termination_status(m) in [MOI.OPTIMAL, MOI.LOCALLY_SOLVED])
+            return termination_status(m)
         end
 
-        push!(mdata.utopiavarvalues, [getvalue(var) for var in vararr])
-        push!(mdata.paretovarvalues, [getvalue(var) for var in vararr])
+        push!(mdata.utopiavarvalues, [value(var) for var in vararr])
+        push!(mdata.paretovarvalues, [value(var) for var in vararr])
 
         Phi[:,i] = sensevalue.(objectives)
 
-        push!(mdata.paretofront, getvalue(objectives))
+        push!(mdata.paretofront, value.(objectives))
     end
     Fmax = maximum(Phi, dims=2)
     Fmin = minimum(Phi, dims=2) # == diag(Phi)?
@@ -45,27 +44,27 @@ function multisolve(m::Model, mdata::MultiData, ::WeightedSum, ::LinearProblem)
             # they are already performed
             continue
         end
-        JuMP.setobjective(m, :Min,
+        @objective(m, MOI.MIN_SENSE,
             sum(betaval[i]*(sensemap[objectives[i].sense]*objectives[i].f -
             Fmin[i])/(Fmax[i]-Fmin[i]) for i in Base.OneTo(numobj))
         )
 
-        status = solve(m, ignore_solve_hook=true);
-        if status != :Optimal
-            return status
+        optimize!(m, ignore_optimize_hook=true);
+        if !(termination_status(m) in [MOI.OPTIMAL, MOI.LOCALLY_SOLVED])
+            return termination_status(m)
         end
 
-        push!(mdata.paretofront, getvalue(objectives))
-        push!(mdata.paretovarvalues, [getvalue(var) for var in vararr])
+        push!(mdata.paretofront, value.(objectives))
+        push!(mdata.paretovarvalues, [value(var) for var in vararr])
     end
-    return :Optimal
+    return MOI.OPTIMAL
 end
 
 function multisolve(m::Model, mdata::MultiData, ::EpsilonCons, ::LinearProblem)
     objectives = mdata.objectives
-    sensemap = Dict(:Min => 1.0, :Max => -1.0)
+    sensemap = Dict(MOI.MIN_SENSE => 1.0, MOI.MAX_SENSE => -1.0)
 
-    vararr = [JuMP.Variable(m,i) for i in Base.OneTo(MathProgBase.numvar(m))]
+    vararr = all_variables(m)
 
     numobj = length(objectives)
     Phi = zeros(numobj,numobj)
@@ -81,20 +80,19 @@ function multisolve(m::Model, mdata::MultiData, ::EpsilonCons, ::LinearProblem)
     for (i, objective) in enumerate(objectives)
         @objective(m, objective.sense, objective.f)
         for (key, value) in objective.initialvalue
-            # TODO: What is the correct way to do this? (anonymous variables)
-            setvalue(m.objDict[key], value)
+            set_start_value(variable_by_name(m, key), value)
         end
-        status = solve(m, ignore_solve_hook=true);
-        if status != :Optimal
-            return status
+        optimize!(m, ignore_optimize_hook=true);
+        if !(termination_status(m) in [MOI.OPTIMAL, MOI.LOCALLY_SOLVED])
+            return termination_status(m)
         end
 
-        push!(mdata.utopiavarvalues, [getvalue(var) for var in vararr])
-        push!(mdata.paretovarvalues, [getvalue(var) for var in vararr])
+        push!(mdata.utopiavarvalues, [value(var) for var in vararr])
+        push!(mdata.paretovarvalues, [value(var) for var in vararr])
 
         Phi[:,i] = sensevalue.(objectives)
 
-        push!(mdata.paretofront, getvalue(objectives))
+        push!(mdata.paretofront, value.(objectives))
     end
     Fmax = maximum(Phi, dims=2)
     Fmin = minimum(Phi, dims=2) # == diag(Phi)?
@@ -110,16 +108,16 @@ function multisolve(m::Model, mdata::MultiData, ::EpsilonCons, ::LinearProblem)
 
     for betaval in 0.0:0.001:1.0
 
-        JuMP.setRHS(objconstr, betaval*Fmin[1]+(1-betaval)*Fmax[1])
+        set_normalized_rhs(objconstr, betaval*Fmin[1]+(1-betaval)*Fmax[1])
 
-        status = solve(m, ignore_solve_hook=true);
-        if status != :Optimal
-            return status
+        optimize!(m, ignore_optimize_hook=true);
+        if !(termination_status(m) in [MOI.OPTIMAL, MOI.LOCALLY_SOLVED])
+            return termination_status(m)
         end
 
-        push!(mdata.paretofront, getvalue(objectives))
-        push!(mdata.paretovarvalues, [getvalue(var) for var in vararr])
+        push!(mdata.paretofront, value.(objectives))
+        push!(mdata.paretovarvalues, [value(var) for var in vararr])
     end
 
-    return :Optimal
+    return MOI.OPTIMAL
 end

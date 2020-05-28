@@ -7,10 +7,10 @@ MultiJuMP enables the user to easily run multiobjective optimisation problems
 and generate Pareto fronts. The code is built as an extension of
 [JuMP](https://github.com/JuliaOpt/JuMP.jl).
 We have implemented three ways to trace out the Pareto front:
-- Normal Boundary Intersection (`solve(m, method = NBI())`)
+- Normal Boundary Intersection (`optimize!(m, method = NBI())`)
     * This method is applicable only for nonlinear optimisation
-- Weighted sums (`solve(m, method = WeightedSum())`)
-- Constraint methods (`solve(m, method = EpsilonCons())`)
+- Weighted sums (`optimize!(m, method = WeightedSum())`)
+- Constraint methods (`optimize!(m, method = EpsilonCons())`)
     * This method only works for biobjective optimisation as of now
 
 **Disclaimer**: MultiJuMP is *not* developed or maintained by the JuMP developers.
@@ -28,9 +28,9 @@ and `WeightedSum()` methods are supported for linear problems.
 
 ```julia
 using MultiJuMP, JuMP
-using Clp: ClpSolver
+using Clp
 
-const mmodel = multi_model(solver = ClpSolver(), linear = true)
+const mmodel = multi_model(Clp.Optimizer, linear = true)
 const y = @variable(mmodel, 0 <= y <= 10.0)
 const z = @variable(mmodel, 0 <= z <= 10.0)
 @constraint(mmodel, y + z <= 15.0)
@@ -45,7 +45,7 @@ const obj2 = SingleObjective(exp_obj2)
 const multim = get_multidata(mmodel)
 multim.objectives = [obj1, obj2]
 
-solve(mmodel, method = WeightedSum())
+optimize!(mmodel, method = WeightedSum())
 
 # Get the Utopia and Nadir points
 utopiapoint = getutopia(multim)
@@ -54,7 +54,7 @@ nadirpoint = getnadir(multim)
 
 Plotting  with `Plots.jl` is supported via recipes:
 ```julia
-using Plots: plot, title!
+using Plots: plot, title!, scatter!
 pltlin = plot(multim)
 title!(pltlin, "Extrema of the Pareto front")
 
@@ -75,7 +75,7 @@ generating the Pareto surface in nonlinear multicriteria optimization problems_:
 using MultiJuMP, JuMP
 using Ipopt
 
-m = multi_model(solver = IpoptSolver())
+m = multi_model(Ipopt.Optimizer)
 @variable(m, x[i=1:5])
 @NLexpression(m, f1, sum(x[i]^2 for i=1:5))
 @NLexpression(m, f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3)
@@ -84,14 +84,14 @@ m = multi_model(solver = IpoptSolver())
 @NLconstraint(m, sum(x[i]^2 for i=1:5) <= 10)
 
 iv1 = [0.3, 0.5, -0.26, -0.13, 0.28] # Initial guess
-obj1 = SingleObjective(f1, sense = :Min,
-                       iv = Dict{Symbol,Any}(:x => iv1))
-obj2 = SingleObjective(f2, sense = :Min)
+obj1 = SingleObjective(f1, sense = MOI.MIN_SENSE,
+                       iv = Dict{String,Any}("x[$i]" => iv1[i] for i in 1:length(iv1)))
+obj2 = SingleObjective(f2, sense = MOI.MIN_SENSE)
 
 md = get_multidata(m)
 md.objectives = [obj1, obj2]
 md.pointsperdim = 20
-solve(m, method = NBI(false)) # or method = WeightedSum() or method = EpsilonCons()
+optimize!(m, method = NBI(false)) # or method = WeightedSum() or method = EpsilonCons()
 
 # Get the Utopia and Nadir points
 utopiapoint = getutopia(md)

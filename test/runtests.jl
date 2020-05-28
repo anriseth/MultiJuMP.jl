@@ -2,13 +2,13 @@ using MultiJuMP, JuMP
 using Test
 #using AmplNLWriter
 using Ipopt
-using Clp: ClpSolver
+using Clp
 
 
 @testset "Utopia and Nadir points" begin
     mdata = MultiJuMP.MultiData()
-    push!(mdata.objectives, SingleObjective(;sense = :Min))
-    push!(mdata.objectives, SingleObjective(;sense = :Max))
+    push!(mdata.objectives, SingleObjective(;sense = MOI.MIN_SENSE))
+    push!(mdata.objectives, SingleObjective(;sense = MOI.MAX_SENSE))
     mdata.Phi .= [1 2; 3 -1]
     nadir = [2.0, -3.0]
     utopia = [1.0, 1.0]
@@ -19,7 +19,7 @@ end
 
 
 @testset "NBI optimisation" begin
-    m = multi_model(solver = IpoptSolver(print_level=0))
+    m = multi_model(optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))
     @variable(m, x[i=1:5])
     @NLexpressions m begin
         f1, sum(x[i]^2 for i=1:5)
@@ -37,7 +37,7 @@ end
     multim = get_multidata(m)
     multim.objectives = [obj1, obj2]
     multim.pointsperdim = 5
-    solve(m, method = MultiJuMP.NBI(false))
+    optimize!(m, method = MultiJuMP.NBI(false))
 
     f1arr = convert(Array{Float64},
                     [multim.paretofront[i][1] for i in 1:multim.pointsperdim])
@@ -51,7 +51,7 @@ end
 end
 
 @testset "WS optimisation" begin
-    m = multi_model(solver = IpoptSolver(print_level=0))
+    m = multi_model(optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))
     @variable(m, x[i=1:5])
     @NLexpressions m begin
         f1, sum(x[i]^2 for i=1:5)
@@ -69,7 +69,7 @@ end
     multim = get_multidata(m)
     multim.objectives = [obj1, obj2]
     multim.pointsperdim = 5
-    solve(m, method = MultiJuMP.WeightedSum())
+    optimize!(m, method = MultiJuMP.WeightedSum())
 
     f1arr = convert(Array{Float64},
                     [multim.paretofront[i][1] for i in 1:multim.pointsperdim])
@@ -83,7 +83,7 @@ end
 end
 
 @testset "EPS optimisation" begin
-    m = multi_model(solver = IpoptSolver(print_level=0))
+    m = multi_model(optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))
     @variable(m, x[i=1:5])
         @NLexpressions m begin
         f1, sum(x[i]^2 for i=1:5)
@@ -101,7 +101,7 @@ end
     multim = get_multidata(m)
     multim.objectives = [obj1, obj2]
     multim.pointsperdim = 5
-    solve(m, method = MultiJuMP.EpsilonCons())
+    optimize!(m, method = MultiJuMP.EpsilonCons())
 
     f1arr = convert(Array{Float64},
                     [multim.paretofront[i][1] for i in 1:multim.pointsperdim])
@@ -116,7 +116,7 @@ end
 
 
 @testset "WS linear" begin
-    mmodel = multi_model(solver = ClpSolver(), linear = true)
+    mmodel = multi_model(Clp.Optimizer, linear = true)
     y = @variable(mmodel, 0 <= y <= 10.0)
     z = @variable(mmodel, 0 <= z <= 10.0)
     @constraint(mmodel, y + z <= 15.0)
@@ -131,8 +131,8 @@ end
     multim = get_multidata(mmodel)
     multim.objectives = [obj1, obj2]
 
-    status = solve(mmodel, method = MultiJuMP.WeightedSum())
-    @test status == :Optimal
+    optimize!(mmodel, method = MultiJuMP.WeightedSum())
+    @test termination_status(mmodel) == MOI.OPTIMAL
 
     true_par_vals = [-10.0, -9.75, -4.5, 0.5]
     for idx in eachindex(true_par_vals)
@@ -145,7 +145,7 @@ end
 end
 
 @testset "EPS linear" begin
-    mmodel = multi_model(solver = ClpSolver(), linear = true)
+    mmodel = multi_model(Clp.Optimizer, linear = true)
     y = @variable(mmodel, 0 <= y <= 10.0)
     z = @variable(mmodel, 0 <= z <= 10.0)
     @constraint(mmodel, y + z <= 15.0)
@@ -160,8 +160,8 @@ end
     multim = get_multidata(mmodel)
     multim.objectives = [obj1, obj2]
 
-    status = solve(mmodel, method = MultiJuMP.EpsilonCons())
-    @test status == :Optimal
+    optimize!(mmodel, method = MultiJuMP.EpsilonCons())
+    @test termination_status(mmodel) == MOI.OPTIMAL
     true_par_pos = begin
         v = [10.0, 10.0, 5.0, 0.0]
         zip(v, reverse(v)) |> collect
@@ -175,7 +175,7 @@ end
 end
 
 @testset "WS linear - alternative model construction" begin
-    m = Model(solver = ClpSolver())
+    m = Model(Clp.Optimizer)
     mmodel = multi_model(m, linear = true)
     y = @variable(mmodel, 0 <= y <= 10.0)
     z = @variable(mmodel, 0 <= z <= 10.0)
@@ -191,8 +191,8 @@ end
     multim = get_multidata(mmodel)
     multim.objectives = [obj1, obj2]
 
-    status = solve(mmodel, method = MultiJuMP.WeightedSum())
-    @test status == :Optimal
+    optimize!(mmodel, method = MultiJuMP.WeightedSum())
+    @test termination_status(mmodel) == MOI.OPTIMAL
 
     true_par_vals = [-10.0, -9.75, -4.5, 0.5]
     for idx in eachindex(true_par_vals)

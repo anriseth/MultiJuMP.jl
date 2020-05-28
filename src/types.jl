@@ -3,29 +3,29 @@ Wrapper for single-objective function with domain type VT
 """
 mutable struct SingleObjective
     f # JuMP-expression TODO: use JuMPTypes or something?
-    sense::Symbol
-    initialvalue::Dict{Symbol,Any} # Variable => Initial value
+    sense::MOI.OptimizationSense
+    initialvalue::Dict{String,Any} # Variable => Initial value
     # TODO: implement bound in algorithm
     bound::Float64 # Hard lower/upper depending on sense
 end
 
-SingleObjective(; sense = :Min) = SingleObjective(Any, sense, Dict{Symbol,Any}(), NaN)
-function SingleObjective(f::JuMPTypes; sense::Symbol = :Min,
-                         iv::Dict{Symbol,Any} = Dict{Symbol,Any}(),
+SingleObjective(; sense = MOI.MIN_SENSE) = SingleObjective(Any, sense, Dict{String,Any}(), NaN)
+function SingleObjective(f::Union{AbstractJuMPScalar, MOI.AbstractScalarFunction, NonlinearExpression}; sense::MOI.OptimizationSense = MOI.MIN_SENSE,
+                         iv::Dict{String,Any} = Dict{String,Any}(),
                          bound::Float64 = NaN)
     SingleObjective(f, sense, iv, bound)
 end
-getvalue(obj::SingleObjective) = getvalue(obj.f)
+value(obj::SingleObjective) = value(obj.f)
 
 """
 Orients the objective in the minimization sense
 """
 function sensevalue(obj::SingleObjective)
     # To get Φ and Fstar with right signs
-    if obj.sense == :Max
-        return -getvalue(obj.f)
+    if obj.sense == MOI.MAX_SENSE
+        return -value(obj.f)
     else
-        return getvalue(obj.f)
+        return value(obj.f)
     end
 end
 
@@ -58,13 +58,13 @@ MultiData(; pointsperdim=10, linear=false, inequality=false) =
               Array{Float64}(undef, 2,2),
               Array{Float64}(undef, 2), inequality)
 
-function multi_model(;solver=JuMP.UnsetSolver(), linear=false)
-    m = Model(solver=solver)
+function multi_model(optimizer; linear=false)
+    m = Model(optimizer)
     return multi_model(m; linear=linear)
 end
 
 function multi_model(m::JuMP.AbstractModel; linear=false)
-    m.solvehook = solvehook # defined in methods.jl
+    m.optimize_hook = solvehook # defined in methods.jl
     m.ext[:Multi] = MultiData(;linear=linear)
     return m
 end

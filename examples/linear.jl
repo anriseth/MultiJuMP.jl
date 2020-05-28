@@ -3,9 +3,9 @@ This example shows a simple linear bi-objective problem.
 ==#
 
 using MultiJuMP, JuMP
-using Clp: ClpSolver
+using Clp
 
-const mmodel = multi_model(solver = ClpSolver(), linear = true)
+const mmodel = multi_model(Clp.Optimizer, linear = true)
 const y = @variable(mmodel, 0 <= y <= 10.0)
 const z = @variable(mmodel, 0 <= z <= 10.0)
 @constraint(mmodel, y + z <= 15.0)
@@ -20,7 +20,7 @@ const obj2 = SingleObjective(exp_obj2)
 const multim = get_multidata(mmodel)
 multim.objectives = [obj1, obj2]
 
-solve(mmodel, method = :WS)
+optimize!(mmodel, method = WeightedSum())
 
 using Plots: plot
 plot(multim)
