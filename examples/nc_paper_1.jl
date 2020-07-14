@@ -13,19 +13,19 @@ not necessary with the NBI method.
 using MultiJuMP, JuMP
 using Ipopt
 
-m = multi_model(solver = IpoptSolver())
+m = multi_model(Ipopt.Optimizer)
 @variable(m, x[i=1:2])
 @NLexpression(m, f1, x[1])
 @NLexpression(m, f2, x[2])
 @NLconstraint(m, ((x[1]-20)/20)^8+(x[2]-1)^8 <= 1)
 
-obj1 = SingleObjective(f1, sense = :Min)
-obj2 = SingleObjective(f2, sense = :Min)
+obj1 = SingleObjective(f1, sense = MOI.MIN_SENSE)
+obj2 = SingleObjective(f2, sense = MOI.MIN_SENSE)
 
 multim = get_multidata(m)
 multim.objectives = [obj1, obj2]
 multim.pointsperdim = 20
-solve(m, method = NBI())
+optimize!(m, method = NBI())
 
 using Plots
 plot(multim)

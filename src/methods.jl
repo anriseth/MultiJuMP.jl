@@ -38,7 +38,7 @@ function getutopia(m::MultiData)
     Fmin = diag(m.Phi)
     # Convert values depending on whether
     # we maximize or minimize them.
-    multiplier = (obj.sense == :Max ? -1. : 1. for obj in m.objectives)
+    multiplier = (obj.sense == MOI.MAX_SENSE ? -1. : 1. for obj in m.objectives)
     return [mult * f for (mult, f) in zip(multiplier, Fmin)]
 end
 
@@ -49,6 +49,6 @@ function getnadir(m::MultiData)
     Fmax = (f for f in maximum(m.Phi, dims=2))
     # Convert values depending on whether
     # we maximize or minimize them.
-    multiplier = (obj.sense == :Max ? -1. : 1. for obj in m.objectives)
+    multiplier = (obj.sense == MOI.MAX_SENSE ? -1. : 1. for obj in m.objectives)
     return [mult * f for (mult, f) in zip(multiplier, Fmax)]
 end

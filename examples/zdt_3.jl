@@ -14,7 +14,7 @@ the inequality-extended NBI method
 
 using JuMP, MultiJuMP, Ipopt
 
-m = multi_model(solver=IpoptSolver())
+m = multi_model(Ipopt.Optimizer)
 n = 30
 
 l = -ones(n); l[1] = 0
@@ -26,27 +26,27 @@ u = ones(n)
 @NLexpression(m, f2, g*h)
 
 iv1 = zeros(n)
-obj1 = SingleObjective(f1, sense = :Min,
-                       iv = Dict{Symbol, Any}(:x => iv1))
+obj1 = SingleObjective(f1, sense = MOI.MIN_SENSE,
+                       iv = Dict{String, Any}("x[$i]" => j for (i,j) in enumerate(iv1)))
 
 # As the problem is nonconvex, we have to supply the
 # initial value to get the global minimum of f2
 iv2 = zeros(n)
 iv2[1] = 0.85
-obj2 = SingleObjective(f2, sense = :Min,
-                       iv = Dict{Symbol, Any}(:x => iv2))
+obj2 = SingleObjective(f2, sense = MOI.MIN_SENSE,
+                       iv = Dict{String, Any}("x[$i]" => j for (i,j) in enumerate(iv2)))
 
 multim = get_multidata(m)
 multim.objectives = [obj1, obj2]
 multim.pointsperdim = 60
 # NB: solve fails with an infeasibility error 65% through the algorithm,
 # You can still plot the results by pasting in the plot_comparison() function below
-solve(m, method = NBI(true))
+optimize!(m, method = NBI(true))
 
 function pltfun(x1)
-    setvalue(x[1], x1)
-    setvalue(x[2:n], zeros(n-1))
-    getvalue(f2)
+    set_start_value(x[1], x1)
+    set_start_value(x[2:n], zeros(n-1))
+    value(f2)
 end
 
 using Plots
