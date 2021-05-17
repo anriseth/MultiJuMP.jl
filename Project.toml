@@ -1,7 +1,7 @@
 name = "MultiJuMP"
 uuid = "f6097e2c-3ba3-5605-a9a8-3a277acb490f"
 authors = ["Asbjørn Nilsen Riseth <anriseth@gmail.com>"]
-version = "0.6.1"
+version = "0.6.0"
 
 [deps]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
@@ -10,3 +10,11 @@ LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MathProgBase = "fdba3010-5040-5b88-9595-932c9decdf73"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+
+[compat]
+julia = "1"
+Combinatorics = "^1.0.2"
+JuMP = "0.21.2"
+LaTeXStrings = "1.1"
+MathProgBase = "^0.7.8"
+RecipesBase = "^1.0.1"
