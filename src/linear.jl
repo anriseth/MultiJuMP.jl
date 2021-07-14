@@ -104,7 +104,6 @@ function multisolve(m::Model, mdata::MultiData, ::EpsilonCons, ::LinearProblem)
     @constraint(m, objconstr,
                   sensemap[objectives[1].sense]*objectives[1].f
                   <= Fmax[1])
-    betatree = betas(numobj, mdata.pointsperdim-1)
 
     for betaval in 0.0:0.001:1.0
 
