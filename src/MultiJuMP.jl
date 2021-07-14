@@ -3,7 +3,7 @@
 module MultiJuMP
 
 using JuMP
-import JuMP: value
+import JuMP:value
 import MathProgBase
 using RecipesBase, LaTeXStrings
 import Combinatorics

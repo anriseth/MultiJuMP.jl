@@ -9,10 +9,10 @@ mutable struct SingleObjective
     bound::Float64 # Hard lower/upper depending on sense
 end
 
-SingleObjective(; sense = MOI.MIN_SENSE) = SingleObjective(Any, sense, Dict{String,Any}(), NaN)
-function SingleObjective(f::Union{AbstractJuMPScalar, MOI.AbstractScalarFunction, NonlinearExpression}; sense::MOI.OptimizationSense = MOI.MIN_SENSE,
-                         iv::Dict{String,Any} = Dict{String,Any}(),
-                         bound::Float64 = NaN)
+SingleObjective(; sense=MOI.MIN_SENSE) = SingleObjective(Any, sense, Dict{String,Any}(), NaN)
+function SingleObjective(f::Union{AbstractJuMPScalar,MOI.AbstractScalarFunction,NonlinearExpression}; sense::MOI.OptimizationSense=MOI.MIN_SENSE,
+                         iv::Dict{String,Any}=Dict{String,Any}(),
+                         bound::Float64=NaN)
     SingleObjective(f, sense, iv, bound)
 end
 value(obj::SingleObjective) = value(obj.f)
@@ -55,7 +55,7 @@ MultiData(; pointsperdim=10, linear=false, inequality=false) =
     MultiData(Array{SingleObjective}(undef, 0),
               linear, pointsperdim,
               Vector{Float64}[], Vector{Float64}[], Any[],
-              Array{Float64}(undef, 2,2),
+              Array{Float64}(undef, 2, 2),
               Array{Float64}(undef, 2), inequality)
 
 function multi_model(optimizer; linear=false)
@@ -85,7 +85,7 @@ Sets up the tree of all possible
 convex combinations of the objectives
 """
 function betas(levels, parts)
-    map(Combinatorics.combinations(1:(levels+parts-1),(levels-1))) do x
-        ([x;levels+parts].-[0;x] .-1)/parts
+    map(Combinatorics.combinations(1:(levels + parts - 1), (levels - 1))) do x
+        ([x;levels + parts] .- [0;x] .- 1) / parts
     end
 end

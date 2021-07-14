@@ -5,7 +5,7 @@ function multisolve(m::Model, mdata::MultiData, ::WeightedSum, ::NonLinearProble
     vararr = all_variables(m)
 
     numobj = length(objectives)
-    Phi = zeros(numobj,numobj)
+    Phi = zeros(numobj, numobj)
 
     # Individual minimisations
     for (i, objective) in enumerate(objectives)
@@ -37,10 +37,10 @@ function multisolve(m::Model, mdata::MultiData, ::WeightedSum, ::NonLinearProble
     @NLparameter(m, β[i=1:numobj] == beta[i])
 
     @NLobjective(m, MOI.MIN_SENSE,
-                 sum(β[i]*(sensemap[objectives[i].sense]*objectives[i].f -
-                           Fmin[i])/(Fmax[i]-Fmin[i]) for i=1:numobj))
+                 sum(β[i] * (sensemap[objectives[i].sense] * objectives[i].f -
+                           Fmin[i]) / (Fmax[i] - Fmin[i]) for i = 1:numobj))
 
-    betatree = betas(numobj, mdata.pointsperdim-1)
+    betatree = betas(numobj, mdata.pointsperdim - 1)
 
     for betaval in betatree
         if count(t -> t != 0, betaval) == 1
@@ -73,7 +73,7 @@ function multisolve(m::Model, mdata::MultiData, met::NBI, ::NonLinearProblem)
     # Stage 1: Calculate Φ
     numobj = length(objectives)
     Fstar = zeros(numobj)
-    Phi = zeros(numobj,numobj)
+    Phi = zeros(numobj, numobj)
 
     # Individual minimisations
     for (i, objective) in enumerate(objectives)
@@ -115,22 +115,22 @@ function multisolve(m::Model, mdata::MultiData, met::NBI, ::NonLinearProblem)
         # Standard NBI
         for (i, objective) in enumerate(objectives)
             @NLconstraint(m,
-                          sum(Phi[i,j]*(β[j]-t)
+                          sum(Phi[i,j] * (β[j] - t)
                               for j = 1:numobj if j != i) ==
-                          sensemap[objective.sense]*objective.f-Fstar[i])
+                          sensemap[objective.sense] * objective.f - Fstar[i])
         end
     else
         # Pascoletti-Serafini extension
         for (i, objective) in enumerate(objectives)
             @NLconstraint(m,
-                          sum(Phi[i,j]*(β[j]-t)
-                              for j=1:numobj if j != i) >=
-                          sensemap[objective.sense]*objective.f-Fstar[i])
+                          sum(Phi[i,j] * (β[j] - t)
+                              for j = 1:numobj if j != i) >=
+                          sensemap[objective.sense] * objective.f - Fstar[i])
         end
     end
 
     # Stage 3: Solve NBI subproblems
-    betatree = betas(numobj, mdata.pointsperdim-1)
+    betatree = betas(numobj, mdata.pointsperdim - 1)
 
     for betaval in betatree
         if count(t -> t != 0, betaval) == 1
@@ -158,7 +158,7 @@ function multisolve(m::Model, mdata::MultiData, ::EpsilonCons, ::NonLinearProble
     vararr = all_variables(m)
 
     numobj = length(objectives)
-    Phi = zeros(numobj,numobj)
+    Phi = zeros(numobj, numobj)
 
     if numobj > 2
         # TODO:
@@ -195,11 +195,11 @@ function multisolve(m::Model, mdata::MultiData, ::EpsilonCons, ::NonLinearProble
     beta = zeros(numobj); beta[end] = 1.0
     @NLparameter(m, β[i=1:numobj] == beta[i])
 
-    @NLconstraint(m, objconstr[i=1:numobj-1],
-                  sensemap[objectives[i].sense]*objectives[i].f
-                  <= β[i]*Fmin[i]+(1-β[i])*Fmax[i])
+    @NLconstraint(m, objconstr[i=1:numobj - 1],
+                  sensemap[objectives[i].sense] * objectives[i].f
+                  <= β[i] * Fmin[i] + (1 - β[i]) * Fmax[i])
 
-    betatree = betas(numobj, mdata.pointsperdim-1)
+    betatree = betas(numobj, mdata.pointsperdim - 1)
 
     for betaval in betatree
         if count(t -> t != 0, betaval) == 1
