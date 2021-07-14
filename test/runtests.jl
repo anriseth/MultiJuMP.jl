@@ -1,14 +1,14 @@
 using MultiJuMP, JuMP
 using Test
-#using AmplNLWriter
+# using AmplNLWriter
 using Ipopt
 using Clp
 
 
 @testset "Utopia and Nadir points" begin
     mdata = MultiJuMP.MultiData()
-    push!(mdata.objectives, SingleObjective(;sense = MOI.MIN_SENSE))
-    push!(mdata.objectives, SingleObjective(;sense = MOI.MAX_SENSE))
+    push!(mdata.objectives, SingleObjective(;sense=MOI.MIN_SENSE))
+    push!(mdata.objectives, SingleObjective(;sense=MOI.MAX_SENSE))
     mdata.Phi .= [1 2; 3 -1]
     nadir = [2.0, -3.0]
     utopia = [1.0, 1.0]
@@ -22,13 +22,13 @@ end
     m = multi_model(optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))
     @variable(m, x[i=1:5])
     @NLexpressions m begin
-        f1, sum(x[i]^2 for i=1:5)
-        f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3
+        f1, sum(x[i]^2 for i = 1:5)
+        f2, 3x[1] + 2x[2] - x[3] / 3 + 0.01 * (x[4] - x[5])^3
     end
     @NLconstraints m begin
-        x[1]+2x[2]-x[3]-0.5x[4]+x[5]==2
-        4x[1]-2x[2]+0.8x[3]+0.6x[4]+0.5x[5]^2 == 0
-        sum(x[i]^2 for i=1:5) <= 10
+        x[1] + 2x[2] - x[3] - 0.5x[4] + x[5] == 2
+        4x[1] - 2x[2] + 0.8x[3] + 0.6x[4] + 0.5x[5]^2 == 0
+        sum(x[i]^2 for i = 1:5) <= 10
     end
 
     obj1 = SingleObjective(f1)
@@ -37,7 +37,7 @@ end
     multim = get_multidata(m)
     multim.objectives = [obj1, obj2]
     multim.pointsperdim = 5
-    optimize!(m, method = MultiJuMP.NBI(false))
+    optimize!(m, method=MultiJuMP.NBI(false))
 
     f1arr = convert(Array{Float64},
                     [multim.paretofront[i][1] for i in 1:multim.pointsperdim])
@@ -54,13 +54,13 @@ end
     m = multi_model(optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))
     @variable(m, x[i=1:5])
     @NLexpressions m begin
-        f1, sum(x[i]^2 for i=1:5)
-        f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3
+        f1, sum(x[i]^2 for i = 1:5)
+        f2, 3x[1] + 2x[2] - x[3] / 3 + 0.01 * (x[4] - x[5])^3
     end
     @NLconstraints m begin
-        x[1]+2x[2]-x[3]-0.5x[4]+x[5]==2
-        4x[1]-2x[2]+0.8x[3]+0.6x[4]+0.5x[5]^2 == 0
-        sum(x[i]^2 for i=1:5) <= 10
+        x[1] + 2x[2] - x[3] - 0.5x[4] + x[5] == 2
+        4x[1] - 2x[2] + 0.8x[3] + 0.6x[4] + 0.5x[5]^2 == 0
+        sum(x[i]^2 for i = 1:5) <= 10
     end
 
     obj1 = SingleObjective(f1)
@@ -69,7 +69,7 @@ end
     multim = get_multidata(m)
     multim.objectives = [obj1, obj2]
     multim.pointsperdim = 5
-    optimize!(m, method = MultiJuMP.WeightedSum())
+    optimize!(m, method=MultiJuMP.WeightedSum())
 
     f1arr = convert(Array{Float64},
                     [multim.paretofront[i][1] for i in 1:multim.pointsperdim])
@@ -86,13 +86,13 @@ end
     m = multi_model(optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))
     @variable(m, x[i=1:5])
         @NLexpressions m begin
-        f1, sum(x[i]^2 for i=1:5)
-        f2, 3x[1]+2x[2]-x[3]/3+0.01*(x[4]-x[5])^3
-    end
+        f1, sum(x[i]^2 for i = 1:5)
+        f2, 3x[1] + 2x[2] - x[3] / 3 + 0.01 * (x[4] - x[5])^3
+end
     @NLconstraints m begin
-        x[1]+2x[2]-x[3]-0.5x[4]+x[5]==2
-        4x[1]-2x[2]+0.8x[3]+0.6x[4]+0.5x[5]^2 == 0
-        sum(x[i]^2 for i=1:5) <= 10
+        x[1] + 2x[2] - x[3] - 0.5x[4] + x[5] == 2
+        4x[1] - 2x[2] + 0.8x[3] + 0.6x[4] + 0.5x[5]^2 == 0
+        sum(x[i]^2 for i = 1:5) <= 10
     end
 
     obj1 = SingleObjective(f1)
@@ -101,8 +101,8 @@ end
     multim = get_multidata(m)
     multim.objectives = [obj1, obj2]
     multim.pointsperdim = 5
-    optimize!(m, method = MultiJuMP.EpsilonCons())
-
+    optimize!(m, method=MultiJuMP.EpsilonCons())
+        
     f1arr = convert(Array{Float64},
                     [multim.paretofront[i][1] for i in 1:multim.pointsperdim])
     f2arr = convert(Array{Float64},
@@ -116,22 +116,22 @@ end
 
 
 @testset "WS linear" begin
-    mmodel = multi_model(Clp.Optimizer, linear = true)
+    mmodel = multi_model(Clp.Optimizer, linear=true)
     y = @variable(mmodel, 0 <= y <= 10.0)
     z = @variable(mmodel, 0 <= z <= 10.0)
     @constraint(mmodel, y + z <= 15.0)
 
     # objectives
-    exp_obj1 = @expression(mmodel, -y +0.05 * z)
+    exp_obj1 = @expression(mmodel, -y + 0.05 * z)
     exp_obj2 = @expression(mmodel, 0.05 * y - z)
     obj1 = SingleObjective(exp_obj1)
     obj2 = SingleObjective(exp_obj2)
 
-    # setting objectives in the MultiData
+# setting objectives in the MultiData
     multim = get_multidata(mmodel)
     multim.objectives = [obj1, obj2]
 
-    optimize!(mmodel, method = MultiJuMP.WeightedSum())
+    optimize!(mmodel, method=MultiJuMP.WeightedSum())
     @test termination_status(mmodel) == MOI.OPTIMAL
 
     true_par_vals = [-10.0, -9.75, -4.5, 0.5]
@@ -145,13 +145,13 @@ end
 end
 
 @testset "EPS linear" begin
-    mmodel = multi_model(Clp.Optimizer, linear = true)
+    mmodel = multi_model(Clp.Optimizer, linear=true)
     y = @variable(mmodel, 0 <= y <= 10.0)
     z = @variable(mmodel, 0 <= z <= 10.0)
     @constraint(mmodel, y + z <= 15.0)
 
     # objectives
-    exp_obj1 = @expression(mmodel, -y +0.05 * z)
+    exp_obj1 = @expression(mmodel, -y + 0.05 * z)
     exp_obj2 = @expression(mmodel, 0.05 * y - z)
     obj1 = SingleObjective(exp_obj1)
     obj2 = SingleObjective(exp_obj2)
@@ -160,7 +160,7 @@ end
     multim = get_multidata(mmodel)
     multim.objectives = [obj1, obj2]
 
-    optimize!(mmodel, method = MultiJuMP.EpsilonCons())
+    optimize!(mmodel, method=MultiJuMP.EpsilonCons())
     @test termination_status(mmodel) == MOI.OPTIMAL
     true_par_pos = begin
         v = [10.0, 10.0, 5.0, 0.0]
@@ -169,20 +169,20 @@ end
 
     for (yv, zv) in true_par_pos
         @test any(multim.paretovarvalues) do v
-            ≈(v[1], yv, atol = 0.01) && ≈(v[2], zv, atol = 0.01)
+            ≈(v[1], yv, atol=0.01) && ≈(v[2], zv, atol=0.01)
         end
     end
 end
 
 @testset "WS linear - alternative model construction" begin
     m = Model(Clp.Optimizer)
-    mmodel = multi_model(m, linear = true)
+    mmodel = multi_model(m, linear=true)
     y = @variable(mmodel, 0 <= y <= 10.0)
     z = @variable(mmodel, 0 <= z <= 10.0)
     @constraint(mmodel, y + z <= 15.0)
 
-    # objectives
-    exp_obj1 = @expression(mmodel, -y +0.05 * z)
+        # objectives
+    exp_obj1 = @expression(mmodel, -y + 0.05 * z)
     exp_obj2 = @expression(mmodel, 0.05 * y - z)
     obj1 = SingleObjective(exp_obj1)
     obj2 = SingleObjective(exp_obj2)
@@ -191,7 +191,7 @@ end
     multim = get_multidata(mmodel)
     multim.objectives = [obj1, obj2]
 
-    optimize!(mmodel, method = MultiJuMP.WeightedSum())
+    optimize!(mmodel, method=MultiJuMP.WeightedSum())
     @test termination_status(mmodel) == MOI.OPTIMAL
 
     true_par_vals = [-10.0, -9.75, -4.5, 0.5]

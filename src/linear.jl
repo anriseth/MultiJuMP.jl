@@ -6,7 +6,7 @@ function multisolve(m::Model, mdata::MultiData, ::WeightedSum, ::LinearProblem)
     vararr = all_variables(m)
 
     numobj = length(objectives)
-    Phi = zeros(numobj,numobj)
+    Phi = zeros(numobj, numobj)
 
     # Individual minimisations
     for (i, objective) in enumerate(objectives)
@@ -36,7 +36,7 @@ function multisolve(m::Model, mdata::MultiData, ::WeightedSum, ::LinearProblem)
 
     beta = zeros(numobj); beta[end] = 1.0
 
-    betatree = betas(numobj, mdata.pointsperdim-1)
+    betatree = betas(numobj, mdata.pointsperdim - 1)
 
     for betaval in betatree
         if count(t -> t != 0, betaval) == 1
@@ -45,8 +45,8 @@ function multisolve(m::Model, mdata::MultiData, ::WeightedSum, ::LinearProblem)
             continue
         end
         @objective(m, MOI.MIN_SENSE,
-            sum(betaval[i]*(sensemap[objectives[i].sense]*objectives[i].f -
-            Fmin[i])/(Fmax[i]-Fmin[i]) for i in Base.OneTo(numobj))
+            sum(betaval[i] * (sensemap[objectives[i].sense] * objectives[i].f -
+            Fmin[i]) / (Fmax[i] - Fmin[i]) for i in Base.OneTo(numobj))
         )
 
         optimize!(m, ignore_optimize_hook=true);
@@ -67,7 +67,7 @@ function multisolve(m::Model, mdata::MultiData, ::EpsilonCons, ::LinearProblem)
     vararr = all_variables(m)
 
     numobj = length(objectives)
-    Phi = zeros(numobj,numobj)
+    Phi = zeros(numobj, numobj)
 
     if numobj > 2
         # TODO:
@@ -102,12 +102,12 @@ function multisolve(m::Model, mdata::MultiData, ::EpsilonCons, ::LinearProblem)
     @objective(m, objectives[end].sense, objectives[end].f)
 
     @constraint(m, objconstr,
-                  sensemap[objectives[1].sense]*objectives[1].f
+                  sensemap[objectives[1].sense] * objectives[1].f
                   <= Fmax[1])
 
     for betaval in 0.0:0.001:1.0
 
-        set_normalized_rhs(objconstr, betaval*Fmin[1]+(1-betaval)*Fmax[1])
+        set_normalized_rhs(objconstr, betaval * Fmin[1] + (1 - betaval) * Fmax[1])
 
         optimize!(m, ignore_optimize_hook=true);
         if !(termination_status(m) in [MOI.OPTIMAL, MOI.LOCALLY_SOLVED])
