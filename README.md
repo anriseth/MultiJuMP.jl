@@ -1,3 +1,13 @@
+## JuMP v1.8 update
+
+JuMP v1.8.0 added native support for multiobjective problems, so there is no longer
+a need to use the `MultiJuMP.jl` extension. See the JuMP documentation for more
+details: https://jump.dev/JuMP.jl/v1.8/tutorials/linear/multi_objective_knapsack/
+
+A collection of solution algorithms is available in the MultiObjectiveAlgorithms.jl
+package: https://github.com/jump-dev/MultiObjectiveAlgorithms.jl. Please open an issue
+there if you have feature requests or bug reports.
+
 # MultiJuMP
 
 [![Build Status](https://travis-ci.org/anriseth/MultiJuMP.jl.svg?branch=master)](https://travis-ci.org/anriseth/MultiJuMP.jl)
